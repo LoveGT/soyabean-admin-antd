@@ -33,6 +33,11 @@ declare module "@elegant-router/types" {
     "404": "/404";
     "500": "/500";
     "about": "/about";
+    "base": "/base";
+    "base_number": "/base/number";
+    "base_zodiac": "/base/zodiac";
+    "data": "/data";
+    "data_report": "/data/report";
     "function": "/function";
     "function_hide-child": "/function/hide-child";
     "function_hide-child_one": "/function/hide-child/one";
@@ -105,6 +110,8 @@ declare module "@elegant-router/types" {
     | "404"
     | "500"
     | "about"
+    | "base"
+    | "data"
     | "function"
     | "home"
     | "iframe-page"
@@ -136,6 +143,9 @@ declare module "@elegant-router/types" {
     | "iframe-page"
     | "login"
     | "about"
+    | "base_number"
+    | "base_zodiac"
+    | "data_report"
     | "function_hide-child_one"
     | "function_hide-child_three"
     | "function_hide-child_two"

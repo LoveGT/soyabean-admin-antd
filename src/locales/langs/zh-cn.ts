@@ -192,7 +192,12 @@ const local: App.I18n.Schema = {
     exception: '异常页',
     exception_403: '403',
     exception_404: '404',
-    exception_500: '500'
+    exception_500: '500',
+    'base': '基础数据',
+    'base_zodiac': '生肖管理',
+    'base_number': '号码管理',
+    'data': '数据统计',
+    'data_report': '报表中心',
   },
   page: {
     login: {
