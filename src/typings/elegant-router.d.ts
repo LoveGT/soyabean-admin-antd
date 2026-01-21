@@ -34,6 +34,7 @@ declare module "@elegant-router/types" {
     "500": "/500";
     "about": "/about";
     "base": "/base";
+    "base_amount": "/base/amount";
     "base_number": "/base/number";
     "base_zodiac": "/base/zodiac";
     "data": "/data";
@@ -143,6 +144,7 @@ declare module "@elegant-router/types" {
     | "iframe-page"
     | "login"
     | "about"
+    | "base_amount"
     | "base_number"
     | "base_zodiac"
     | "data_report"

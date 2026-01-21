@@ -180,6 +180,7 @@ const routeMap: RouteMap = {
   "500": "/500",
   "about": "/about",
   "base": "/base",
+  "base_amount": "/base/amount",
   "base_number": "/base/number",
   "base_zodiac": "/base/zodiac",
   "data": "/data",

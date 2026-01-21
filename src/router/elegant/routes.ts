@@ -51,17 +51,6 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
-    name: 'home',
-    path: '/home',
-    component: 'layout.base$view.home',
-    meta: {
-      title: 'home',
-      i18nKey: 'route.home',
-      icon: 'mdi:monitor-dashboard',
-      order: 1
-    }
-  },
-  {
     name: 'base',
     path: '/base',
     component: 'layout.base',
@@ -72,13 +61,22 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
+        name: 'base_amount',
+        path: '/base/amount',
+        component: 'view.base_amount',
+        meta: {
+          title: 'base_amount',
+          i18nKey: 'route.base_amount'
+        }
+      },
+      {
         name: 'base_number',
         path: '/base/number',
         component: 'view.base_number',
         meta: {
           title: 'base_number',
           i18nKey: 'route.base_number',
-          order:2
+          order: 2
         }
       },
       {
@@ -88,7 +86,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'base_zodiac',
           i18nKey: 'route.base_zodiac',
-          order:1
+          order: 1
         }
       }
     ]
@@ -231,6 +229,17 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       }
     ]
+  },
+  {
+    name: 'home',
+    path: '/home',
+    component: 'layout.base$view.home',
+    meta: {
+      title: 'home',
+      i18nKey: 'route.home',
+      icon: 'mdi:monitor-dashboard',
+      order: 1
+    }
   },
   {
     name: 'iframe-page',

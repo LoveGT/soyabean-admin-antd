@@ -193,17 +193,10 @@ function handleSubmit() {
           </template>
         </Input>
       </div>
-      
-      <!-- < 
-        :columns="columns"
-        :data-source="zodiacs"
-        :pagination="false"
-        row-key="id"
-      /> -->
     </ACard>
     <!-- Cards Section -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between h-140px relative overflow-hidden group hover:shadow-md transition-all cursor-pointer" @click="handleEdit(item)">
+      <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between  relative overflow-hidden group hover:shadow-md transition-all cursor-pointer" @click="handleEdit(item)">
         <div class="flex justify-between items-start">
           <div class="w-10 h-10 rounded-full flex items-center justify-center" :class="elementColors[item.element]">
              <span :class="[item.icon, 'text-xl']"></span> 

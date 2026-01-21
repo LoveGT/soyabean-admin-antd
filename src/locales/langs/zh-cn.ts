@@ -196,6 +196,7 @@ const local: App.I18n.Schema = {
     'base': '基础数据',
     'base_zodiac': '生肖管理',
     'base_number': '号码管理',
+    'base_amount': '金额管理',
     'data': '数据统计',
     'data_report': '报表中心',
   },
