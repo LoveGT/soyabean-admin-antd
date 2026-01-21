@@ -184,7 +184,23 @@ function handleSubmit() {
         新增生肖
       </Button>
     </div>
-
+    <ACard :bordered="false" class="card-wrapper" :body-style="{ padding: '0px' }">
+      <div class="p-4 flex justify-between items-center border-b border-gray-100">
+        <!-- <h3 class="font-bold text-lg m-0">所有列表</h3> -->
+        <Input v-model:value="searchText" placeholder="搜索生肖..." class="w-200px">
+          <template #suffix>
+            <span class="i-ant-design:search-outlined text-gray-400"></span>
+          </template>
+        </Input>
+      </div>
+      
+      <!-- < 
+        :columns="columns"
+        :data-source="zodiacs"
+        :pagination="false"
+        row-key="id"
+      /> -->
+    </ACard>
     <!-- Cards Section -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between h-140px relative overflow-hidden group hover:shadow-md transition-all cursor-pointer" @click="handleEdit(item)">
@@ -215,25 +231,6 @@ function handleSubmit() {
         <span>添加更多生肖...</span>
       </div>
     </div>
-
-    <!-- List Section -->
-    <ACard :bordered="false" class="card-wrapper" :body-style="{ padding: '0px' }">
-      <div class="p-4 flex justify-between items-center border-b border-gray-100">
-        <h3 class="font-bold text-lg m-0">所有列表</h3>
-        <Input v-model:value="searchText" placeholder="搜索生肖..." class="w-200px">
-          <template #suffix>
-            <span class="i-ant-design:search-outlined text-gray-400"></span>
-          </template>
-        </Input>
-      </div>
-      
-      <ATable
-        :columns="columns"
-        :data-source="zodiacs"
-        :pagination="false"
-        row-key="id"
-      />
-    </ACard>
 
     <!-- Modal -->
     <Modal
