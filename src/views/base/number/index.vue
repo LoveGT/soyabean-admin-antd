@@ -5,6 +5,7 @@ import { Card, Button, Modal, Input, message, Popconfirm, Tabs, TabPane, Form, S
 interface ZodiacNumber {
   id: number;
   value: string;
+  color?: string;
 }
 
 interface Zodiac {
@@ -30,59 +31,6 @@ const zodiacs = ref<Zodiac[]>([
   { id: 11, name: '戌狗', icon: 'i-mdi:dog', element: 'Earth', numbers: [{ id: 14, value: '11' }] },
   { id: 12, name: '亥猪', icon: 'i-mdi:pig', element: 'Water', numbers: [{ id: 15, value: '12' }] },
 ]);
-
-// Modal Logic
-const modalVisible = ref(false);
-const activeTab = ref('1');
-const currentZodiacId = ref<number | null>(null);
-
-const formState = reactive({
-  numbers: '',
-  amount: null as number | null,
-  selectedZodiacs: [] as number[],
-  customContent: ''
-});
-
-const zodiacOptions = computed(() => zodiacs.value.map(z => ({ label: z.name, value: z.id })));
-
-function openAddModal(zodiacId: number) {
-  currentZodiacId.value = zodiacId;
-  // Reset form
-  formState.numbers = '';
-  formState.amount = null;
-  formState.selectedZodiacs = zodiacId ? [zodiacId] : [];
-  formState.customContent = '';
-  
-  // Default to Tab 2 if opening from a specific zodiac, else Tab 1
-  activeTab.value = zodiacId ? '2' : '1';
-  
-  modalVisible.value = true;
-}
-
-function handleAddNumber() {
-  if (activeTab.value === '1') {
-    // By Number
-    if (!formState.numbers) {
-      message.warning('请输入号码');
-      return;
-    }
-    // Mock logic: Add numbers to current zodiac (if any) or just show success
-    // In a real app, we'd parse the numbers and amount
-    message.success(`已添加号码: ${formState.numbers}, 金额: ${formState.amount || 0}`);
-  } else if (activeTab.value === '2') {
-    // By Zodiac
-    if (formState.selectedZodiacs.length === 0) {
-      message.warning('请选择生肖');
-      return;
-    }
-    const names = zodiacs.value.filter(z => formState.selectedZodiacs.includes(z.id)).map(z => z.name).join(', ');
-    message.success(`已为 ${names} 添加记录, 金额: ${formState.amount || 0}`);
-  } else {
-    // Custom
-    message.success('自定义录入成功');
-  }
-  modalVisible.value = false;
-}
 
 function handleDeleteNumber(zodiacId: number, numberId: number) {
   const zodiac = zodiacs.value.find(z => z.id === zodiacId);
@@ -117,6 +65,70 @@ const elementBorderColors: Record<string, string> = {
   Metal: 'border-gray-200',
 };
 
+// Color mapping for number balls
+const colorBgMap: Record<string, string> = {
+  '红色': 'bg-red-500',
+  '蓝色': 'bg-blue-500',
+  '绿色': 'bg-green-500'
+};
+
+const colorTextMap: Record<string, string> = {
+  '红色': 'text-white',
+  '蓝色': 'text-white',
+  '绿色': 'text-white'
+};
+
+function getNumberColor(num: ZodiacNumber, zodiacElement: string) {
+  if (num.color) {
+    return {
+      bg: colorBgMap[num.color] || elementBgColors[zodiacElement],
+      text: colorTextMap[num.color] || elementTextColors[zodiacElement]
+    };
+  }
+  return {
+    bg: elementBgColors[zodiacElement],
+    text: elementTextColors[zodiacElement]
+  };
+}
+// Modal state
+const modalVisible = ref(false);
+const currentZodiacId = ref<number | null>(null);
+const formState = reactive({
+  number: '',
+  color: '红色'
+});
+
+const colorOptions = [
+  { label: '红色', value: '红色' },
+  { label: '蓝色', value: '蓝色' },
+  { label: '绿色', value: '绿色' }
+];
+
+function openAddModal(zodiacId: number) {
+  currentZodiacId.value = zodiacId;
+  formState.number = '';
+  formState.color = '红色';
+  modalVisible.value = true;
+}
+
+function handleAddNumber() {
+  if (!formState.number) {
+    message.warning('请输入号码');
+    return;
+  }
+  
+  const zodiac = zodiacs.value.find(z => z.id === currentZodiacId.value);
+  if (zodiac) {
+    const newNumber: ZodiacNumber = {
+      id: Date.now(),
+      value: formState.number,
+      color: formState.color
+    };
+    zodiac.numbers.push(newNumber);
+    message.success('添加成功');
+    modalVisible.value = false;
+  }
+}
 </script>
 
 <template>
@@ -161,7 +173,7 @@ const elementBorderColors: Record<string, string> = {
               <!-- Number Circle -->
               <div 
                 class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm border border-gray-100 transition-transform hover:scale-105 select-none"
-                :class="[elementBgColors[zodiac.element], elementTextColors[zodiac.element]]"
+                :class="[getNumberColor(num, zodiac.element).bg, getNumberColor(num, zodiac.element).text]"
               >
                 {{ num.value }}
               </div>
@@ -183,54 +195,17 @@ const elementBorderColors: Record<string, string> = {
         </div>
       </div>
     </div>
-
+    
     <!-- Add Number Modal -->
-    <Modal
-      v-model:open="modalVisible"
-      title="录入号码"
-      @ok="handleAddNumber"
-      destroyOnClose
-      width="600px"
-    >
-      <Tabs v-model:activeKey="activeTab">
-        <!-- Tab 1: By Zodiac Number -->
-        <TabPane key="1" tab="按生肖号码录入">
-          <Form layout="vertical" class="mt-4">
-            <Form.Item label="号码">
-              <Input v-model:value="formState.numbers" placeholder="请输入号码，多个号码用分号隔开 (例如: 40;50)" />
-            </Form.Item>
-            <Form.Item label="金额">
-              <InputNumber v-model:value="formState.amount" class="w-full" placeholder="请输入金额" :min="0" />
-            </Form.Item>
-          </Form>
-        </TabPane>
-
-        <!-- Tab 2: By Zodiac -->
-        <TabPane key="2" tab="按生肖录入">
-          <Form layout="vertical" class="mt-4">
-            <Form.Item label="生肖">
-              <Select
-                v-model:value="formState.selectedZodiacs"
-                mode="multiple"
-                placeholder="请选择生肖"
-                :options="zodiacOptions"
-              />
-            </Form.Item>
-            <Form.Item label="金额">
-              <InputNumber v-model:value="formState.amount" class="w-full" placeholder="请输入金额" :min="0" />
-            </Form.Item>
-          </Form>
-        </TabPane>
-
-        <!-- Tab 3: Custom Entry -->
-        <TabPane key="3" tab="自定义录入">
-          <Form layout="vertical" class="mt-4">
-            <Form.Item label="自定义内容">
-              <Input.TextArea v-model:value="formState.customContent" :rows="4" placeholder="请输入自定义内容" />
-            </Form.Item>
-          </Form>
-        </TabPane>
-      </Tabs>
+    <Modal v-model:open="modalVisible" title="录入号码" @ok="handleAddNumber" destroyOnClose width="500px">
+      <Form layout="vertical" class="mt-4">
+        <Form.Item label="号码">
+          <Input v-model:value="formState.number" placeholder="请输入号码" />
+        </Form.Item>
+        <Form.Item label="波色">
+          <Select v-model:value="formState.color" placeholder="请选择波色" :options="colorOptions" />
+        </Form.Item>
+      </Form>
     </Modal>
   </div>
 </template>
