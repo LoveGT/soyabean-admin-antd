@@ -1,62 +1,49 @@
 <script setup lang="tsx">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { Card, Table, Modal, message, DatePicker, Button, Form, Tag, Input, InputNumber, Tabs, TabPane, Select, Popconfirm } from 'ant-design-vue';
 import dayjs from 'dayjs';
+import { fetchGetZodiacList } from '@/service/api/zodiac';
+import { fetchGetAmountList, fetchAddAmountByNum, fetchAddAmountByZodiac, fetchAddAmountCustom, fetchDeleteAmount } from '@/service/api/amount';
 
-// Mock Data
-interface NumberData {
-    id: number;
-    zodiac: string;
-    number: string;
-    amount: number;
-    date: string;
-}
-
-interface ZodiacNumber {
+// Data Interfaces
+interface AmountRecord {
   id: number;
-  value: string;
+  zodiacName: string;
+  zodiacNum: number | string; // API returns number, custom might be string?
+  amount: number;
+  // date: string; // API doesn't return date yet
 }
 
-interface Zodiac {
-  id: number;
-  name: string;
-  icon: string;
-  element: string; // For potential styling
-  numbers: ZodiacNumber[];
-}
-const allData = ref<NumberData[]>([
-    { id: 1, zodiac: '子鼠', number: '01, 13, 25, 37, 49', amount: 1000, date: '2023-10-27' },
-    { id: 2, zodiac: '丑牛', number: '02, 14, 26, 38', amount: 1500, date: '2023-10-27' },
-    { id: 3, zodiac: '寅虎', number: '03, 15, 27, 39', amount: 800, date: '2023-10-26' },
-    { id: 4, zodiac: '卯兔', number: '04, 16, 28, 40', amount: 2000, date: '2023-10-26' },
-    { id: 5, zodiac: '辰龙', number: '05, 17, 29, 41', amount: 1200, date: '2023-10-25' },
-]);
-const data = ref<NumberData[]>([...allData.value]);
+const data = ref<AmountRecord[]>([]);
+const loading = ref(false);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
 
 const searchDate = ref<dayjs.Dayjs | null>(null);
-const amount = ref<number | null>(null);
+const searchAmount = ref<number | null>(null);
+
 const columns = [
     {
         title: '生肖',
-        dataIndex: 'zodiac',
-        key: 'zodiac',
+        dataIndex: 'zodiacName',
+        key: 'zodiacName',
         align: 'center',
-        customRender: ({ text }: { text: string }) => <span class="font-bold">{text}</span>
+        customRender: ({ text }: { text: string }) => <span class="font-bold">{text || '自定义'}</span>
     },
     {
         title: '生肖号码',
-        dataIndex: 'number',
-        key: 'number',
+        dataIndex: 'zodiacNum',
+        key: 'zodiacNum',
         align: 'center',
-        customRender: ({ text }: { text: string }) => {
-            const nums = text.split(', ');
-            return (
-                <div class="flex justify-center flex-wrap gap-1">
-                    {nums.map(num => (
-                        <Tag color="blue">{num}</Tag>
-                    ))}
-                </div>
-            );
+        customRender: ({ text }: { text: number | string }) => {
+            if (!text && text !== 0) return '-';
+            const numStr = text.toString();
+             // If it's a long string (custom content), just show it
+            if (numStr.length > 10 && isNaN(Number(numStr))) {
+                 return <span>{numStr}</span>;
+            }
+            return <Tag color="blue">{numStr.padStart(2, '0')}</Tag>;
         }
     },
     {
@@ -65,29 +52,24 @@ const columns = [
         key: 'amount',
         align: 'center',
         customRender: ({ text }: { text: number }) => {
-            const limit = amount.value;
+            const limit = searchAmount.value;
             const isOverLimit = limit !== null && text > limit;
             const colorClass = isOverLimit ? 'text-red-600' : 'text-green-600';
             return <span class={`${colorClass} font-mono`}>¥ {text.toLocaleString()}</span>;
         }
     },
     {
-        title: '日期',
-        dataIndex: 'date',
-        key: 'date',
-        align: 'center',
-    },
-    {
         title: '操作',
         key: 'action',
         align: 'center',
-        customRender: ({ record }: { record: NumberData }) => (
+        customRender: ({ record }: { record: AmountRecord }) => (
              <Popconfirm title="确定删除吗?" onConfirm={() => handleDelete(record.id)}>
                 <Button type="link" danger>删除</Button>
             </Popconfirm>
         )
     }
 ];
+
 // Modal Logic
 const modalVisible = ref(false);
 const activeTab = ref('1');
@@ -100,41 +82,69 @@ const formState = reactive({
   customContent: ''
 });
 
-// Mock Data for 12 Zodiacs
-const zodiacs = ref<Zodiac[]>([
-  { id: 1, name: '子鼠', icon: 'i-mdi:rodent', element: 'Water', numbers: [{ id: 1, value: '01' }, { id: 2, value: '13' }] },
-  { id: 2, name: '丑牛', icon: 'i-mdi:cow', element: 'Earth', numbers: [{ id: 3, value: '02' }, { id: 4, value: '14' }] },
-  { id: 3, name: '寅虎', icon: 'i-mdi:tiger', element: 'Wood', numbers: [{ id: 5, value: '03' }, { id: 6, value: '15' }] },
-  { id: 4, name: '卯兔', icon: 'i-mdi:rabbit', element: 'Wood', numbers: [{ id: 7, value: '04' }] },
-  { id: 5, name: '辰龙', icon: 'i-mdi:dragon', element: 'Earth', numbers: [{ id: 8, value: '05' }] },
-  { id: 6, name: '巳蛇', icon: 'i-mdi:snake', element: 'Fire', numbers: [{ id: 9, value: '06' }] },
-  { id: 7, name: '午马', icon: 'i-mdi:horse', element: 'Fire', numbers: [{ id: 10, value: '07' }] },
-  { id: 8, name: '未羊', icon: 'i-mdi:sheep', element: 'Earth', numbers: [{ id: 11, value: '08' }] },
-  { id: 9, name: '申猴', icon: 'i-mdi:monkey', element: 'Metal', numbers: [{ id: 12, value: '09' }] },
-  { id: 10, name: '酉鸡', icon: 'i-mdi:rooster', element: 'Metal', numbers: [{ id: 13, value: '10' }] },
-  { id: 11, name: '戌狗', icon: 'i-mdi:dog', element: 'Earth', numbers: [{ id: 14, value: '11' }] },
-  { id: 12, name: '亥猪', icon: 'i-mdi:pig', element: 'Water', numbers: [{ id: 15, value: '12' }] },
-]);
-const zodiacOptions = computed(() => zodiacs.value.map(z => ({ label: z.name, value: z.id })));
+// Zodiac Options
+const zodiacOptions = ref<{ label: string; value: number }[]>([]);
 
-function openAddModal(zodiacId: number) {
-  currentZodiacId.value = zodiacId;
+async function fetchZodiacs() {
+  const { data, error } = await fetchGetZodiacList();
+  if (!error && data) {
+    zodiacOptions.value = data.map(z => ({ label: z.zodiacName, value: z.id }));
+  }
+}
+
+async function fetchData(page = 1) {
+  loading.value = true;
+  try {
+    const { data: res, error } = await fetchGetAmountList({
+      pageIndex: page,
+      pageSize: pageSize.value,
+      params: {
+        // numGroup: '', // Optional filters
+        // startTime: searchDate.value ? searchDate.value.startOf('day').valueOf() : undefined,
+        // endTime: searchDate.value ? searchDate.value.endOf('day').valueOf() : undefined,
+      }
+    });
+    
+    if (!error && res) {
+      data.value = res.data.map(item => ({
+        id: item.id,
+        zodiacName: item.zodiacName,
+        zodiacNum: item.zodiacNum,
+        amount: item.amount
+      }));
+      total.value = res.total;
+      currentPage.value = res.current || page;
+    }
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchZodiacs();
+  fetchData();
+});
+
+function openAddModal(zodiacId?: number) {
   // Reset form
   formState.numbers = '';
   formState.amount = null;
-  formState.selectedZodiacs = zodiacId ? [zodiacId] : [];
+  formState.selectedZodiacs = typeof zodiacId === 'number' ? [zodiacId] : [];
   formState.customContent = '';
   
-  // Default to Tab 2 if opening from a specific zodiac, else Tab 1
-  activeTab.value = zodiacId ? '2' : '1';
+  // Default to Tab 2 if opening from a specific zodiac (if passed), else Tab 1
+  activeTab.value = typeof zodiacId === 'number' ? '2' : '1';
   
   modalVisible.value = true;
 }
 
-function addAmount() {
-  const newRecords: NumberData[] = [];
-  const date = dayjs().format('YYYY-MM-DD');
-  const baseId = Date.now();
+async function addAmount() {
+  if (!formState.amount) {
+      message.warning('请输入金额');
+      return;
+  }
+
+  let error = null;
 
   if (activeTab.value === '1') {
     // By Number
@@ -142,69 +152,71 @@ function addAmount() {
       message.warning('请输入号码');
       return;
     }
-    const nums = formState.numbers.replace(/，/g, ',').split(/[,; ]+/).filter(Boolean).join(', ');
-    newRecords.push({
-        id: baseId,
-        zodiac: '自定义',
-        number: nums,
-        amount: formState.amount || 0,
-        date
-    });
+    // Parse numbers: "01; 02" -> [1, 2]
+    const nums = formState.numbers.replace(/，/g, ',').split(/[,; ]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
+    if (nums.length === 0) {
+        message.warning('请输入有效的号码');
+        return;
+    }
+    
+    const res = await fetchAddAmountByNum([{
+        zodiacNums: nums,
+        amount: formState.amount
+    }]);
+    error = res.error;
+
   } else if (activeTab.value === '2') {
     // By Zodiac
     if (formState.selectedZodiacs.length === 0) {
       message.warning('请选择生肖');
       return;
     }
-    formState.selectedZodiacs.forEach((zid, index) => {
-        const z = zodiacs.value.find(z => z.id === zid);
-        if (z) {
-            newRecords.push({
-                id: baseId + index,
-                zodiac: z.name,
-                number: '', 
-                amount: formState.amount || 0,
-                date
-            });
-        }
-    });
+    const res = await fetchAddAmountByZodiac([{
+        zodiacIds: formState.selectedZodiacs,
+        amount: formState.amount
+    }]);
+    error = res.error;
+
   } else {
     // Custom
-    newRecords.push({
-        id: baseId,
-        zodiac: '自定义',
-        number: formState.customContent,
-        amount: formState.amount || 0,
-        date
-    });
+    if (!formState.customContent) {
+        message.warning('请输入内容');
+        return;
+    }
+    const res = await fetchAddAmountCustom([{
+        content: formState.customContent,
+        amount: formState.amount
+    }]);
+    error = res.error;
   }
   
-  allData.value.unshift(...newRecords);
-  handleSearch();
-  message.success('录入成功');
-  modalVisible.value = false;
+  if (!error) {
+    message.success('录入成功');
+    modalVisible.value = false;
+    fetchData();
+  }
 }
 
-function handleDelete(id: number) {
-    allData.value = allData.value.filter(item => item.id !== id);
-    handleSearch();
-    message.success('删除成功');
+async function handleDelete(id: number) {
+    const { error } = await fetchDeleteAmount(id);
+    if (!error) {
+        message.success('删除成功');
+        fetchData();
+    }
 }
 
 function handleSearch() {
-    let res = [...allData.value];
-    if (searchDate.value) {
-        const d = searchDate.value.format('YYYY-MM-DD');
-        res = res.filter(item => item.date === d);
-    }
-    // Only filter by date, amount is used for coloring
-    data.value = res;
+    fetchData(1);
 }
 
 function handleReset() {
     searchDate.value = null;
-    amount.value = null;
-    data.value = [...allData.value];
+    searchAmount.value = null;
+    fetchData(1);
+}
+
+function handlePageChange(page: number) {
+    fetchData(page);
 }
 
 </script>
@@ -213,11 +225,12 @@ function handleReset() {
     <div class="flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
         <Card :bordered="false" class="card-wrapper">
             <Form layout="inline" class="flex-wrap gap-4">
+                <!-- Date search not fully supported by API yet, keeping UI -->
                 <Form.Item label="日期查询">
                     <DatePicker v-model:value="searchDate" placeholder="选择日期" class="w-200px" />
                 </Form.Item>
                 <Form.Item label="限定金额">
-                    <InputNumber v-model:value="amount" class="w-full" placeholder="请输入金额" :min="0" />
+                    <InputNumber v-model:value="searchAmount" class="w-full" placeholder="请输入金额" :min="0" />
                 </Form.Item>
                 <Form.Item>
                     <div class="flex gap-2">
@@ -238,12 +251,23 @@ function handleReset() {
             </Form>
         </Card>
         <div class="flex justify-start">
-            <Button type="primary" size="small" class="shadow-sm" @click="openAddModal">
+            <Button type="primary" size="small" class="shadow-sm" @click="() => openAddModal()">
                 录入金额
             </Button>
         </div>
         <Card :bordered="false" class="card-wrapper" :body-style="{ padding: '0px' }">
-            <Table :columns="columns" :data-source="data" :pagination="{ pageSize: 10 }" row-key="id" />
+            <Table 
+                :columns="columns" 
+                :data-source="data" 
+                :pagination="{ 
+                    current: currentPage, 
+                    pageSize: pageSize, 
+                    total: total,
+                    onChange: handlePageChange
+                }" 
+                row-key="id" 
+                :loading="loading"
+            />
         </Card>
         <!-- Add Number Modal -->
         <Modal v-model:open="modalVisible" title="录入金额" @ok="addAmount" destroyOnClose width="600px">
@@ -278,6 +302,9 @@ function handleReset() {
                     <Form layout="vertical" class="mt-4">
                         <Form.Item label="自定义内容">
                             <Input.TextArea v-model:value="formState.customContent" :rows="4" placeholder="请输入自定义内容" />
+                        </Form.Item>
+                        <Form.Item label="金额">
+                            <InputNumber v-model:value="formState.amount" class="w-full" placeholder="请输入金额" :min="0" />
                         </Form.Item>
                     </Form>
                 </TabPane>

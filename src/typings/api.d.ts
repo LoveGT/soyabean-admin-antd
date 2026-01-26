@@ -220,4 +220,105 @@ declare namespace Api {
       children?: MenuTree[];
     };
   }
+
+  /**
+   * Namespace Zodiac
+   */
+  namespace Zodiac {
+    interface ZodiacNum {
+      id: number;
+      zodiacId: number;
+      zodiacName: string;
+      zodiacNum: number;
+      color: number; // 0? Need to check what color maps to
+      numType: number;
+      numSize: number;
+      numGroup: string;
+    }
+
+    interface ZodiacList {
+      id: number;
+      zodiacCode: string;
+      zodiacName: string;
+      homeType: number;
+      homeTypeName: string;
+      zodiacNums: ZodiacNum[];
+    }
+
+    interface AddZodiacParams {
+      zodiacCode: string;
+      zodiacName: string;
+      homeType: number;
+    }
+
+    interface UpdateZodiacParams extends AddZodiacParams {
+      id: number;
+    }
+
+    interface HomeType {
+      value: number;
+      name: string;
+    }
+  }
+
+  /**
+   * Namespace Number
+   */
+  namespace Number {
+    interface AddNumberParams {
+      zodiacId: number;
+      zodiacNum: number;
+      color: number;
+    }
+  }
+
+  /**
+   * Namespace Amount
+   */
+  namespace Amount {
+    interface AmountRecord {
+      id: number;
+      zodiacId: number;
+      zodiacName: string;
+      zodiacNum: number;
+      amount: number;
+    }
+
+    interface AmountListParams {
+      pageIndex: number;
+      pageSize: number;
+      params?: {
+        numGroup?: string;
+        startTime?: number;
+        endTime?: number;
+      };
+      sorts?: {
+        column: string;
+        asc: boolean;
+      }[];
+    }
+
+    interface AmountListResponse extends Common.PaginatingCommonParams {
+      totalPages: number;
+      data: AmountRecord[];
+    }
+
+    interface AddAmountByNumItem {
+      zodiacNums: number[];
+      amount: number;
+    }
+    type AddAmountByNumParams = AddAmountByNumItem[];
+
+    interface AddAmountByZodiacItem {
+      zodiacIds: number[];
+      amount: number;
+    }
+    type AddAmountByZodiacParams = AddAmountByZodiacItem[];
+
+    interface AddAmountCustomItem {
+      content: string;
+      amount: number;
+    }
+    type AddAmountCustomParams = AddAmountCustomItem[];
+  }
 }

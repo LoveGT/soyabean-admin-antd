@@ -1,28 +1,81 @@
 <script setup lang="tsx">
-import { ref, reactive, computed } from 'vue';
-import { Button, Input, Tag, Popconfirm, Modal, Form, Select } from 'ant-design-vue';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { Button, Input, Tag, Popconfirm, Modal, Form, Select, message } from 'ant-design-vue';
+import { fetchGetZodiacList, fetchAddZodiac, fetchUpdateZodiac, fetchDeleteZodiac, fetchGetZodiacHomeType } from '@/service/api/zodiac';
 
-// Mock Data
+// Data Interfaces
 interface Zodiac {
   id: number;
   tag: string;
   name: string;
   code: string;
-  element: string; // 'Water', 'Earth', 'Wood', 'Fire', 'Metal'
+  element: string; // Mapped from homeTypeName
+  homeType: number;
   generation: string;
   icon: string;
 }
 
-const zodiacs = ref<Zodiac[]>([
-  { id: 1, tag: '#01', name: '子鼠', code: 'RAT_PRIMARY', element: 'Water', generation: 'RAT-01', icon: 'i-mdi:rodent' },
-  { id: 2, tag: '#02', name: '丑牛', code: 'OX_PRIMARY', element: 'Earth', generation: 'OX-02', icon: 'i-mdi:cow' },
-  { id: 3, tag: '#03', name: '寅虎', code: 'TIGER_PRIMARY', element: 'Wood', generation: 'TIGER-03', icon: 'i-mdi:tiger' },
-  { id: 4, tag: '#04', name: '卯兔', code: 'RABBIT_PRIMARY', element: 'Wood', generation: 'RABBIT-04', icon: 'i-mdi:rabbit' },
-]);
-
+const zodiacs = ref<Zodiac[]>([]);
 const searchText = ref('');
+const loading = ref(false);
 
-//#region 
+// Icon mapping based on zodiac name (fallback)
+const iconMap: Record<string, string> = {
+  '子鼠': 'i-mdi:rodent',
+  '丑牛': 'i-mdi:cow',
+  '寅虎': 'i-mdi:tiger',
+  '卯兔': 'i-mdi:rabbit',
+  '辰龙': 'i-mdi:dragon',
+  '巳蛇': 'i-mdi:snake',
+  '午马': 'i-mdi:horse',
+  '未羊': 'i-mdi:sheep',
+  '申猴': 'i-mdi:monkey',
+  '酉鸡': 'i-mdi:rooster',
+  '戌狗': 'i-mdi:dog',
+  '亥猪': 'i-mdi:pig'
+};
+
+function getIcon(name: string) {
+  return iconMap[name] || 'i-mdi:zodiac-leo';
+}
+
+// Fetch Data
+async function fetchData() {
+  loading.value = true;
+  try {
+    const { data, error } = await fetchGetZodiacList();
+    if (!error && data) {
+      zodiacs.value = data.map(item => ({
+        id: item.id,
+        tag: `#${item.id.toString().padStart(2, '0')}`,
+        name: item.zodiacName,
+        code: item.zodiacCode,
+        element: item.homeTypeName || 'Unknown',
+        homeType: item.homeType,
+        generation: item.zodiacCode, // Using code as generation for now
+        icon: getIcon(item.zodiacName)
+      }));
+    }
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Fetch Home Types
+const homeTypes = ref<{ label: string; value: number }[]>([]);
+async function fetchHomeTypes() {
+  const { data, error } = await fetchGetZodiacHomeType();
+  if (!error && data) {
+    homeTypes.value = data.map(item => ({ label: item.name, value: item.value }));
+  }
+}
+
+onMounted(() => {
+  fetchData();
+  fetchHomeTypes();
+});
+
+//#region Columns
 const columns = [
   {
     title: '标识',
@@ -46,21 +99,23 @@ const columns = [
     dataIndex: 'element',
     key: 'element',
     customRender: ({ text }: { text: string }) => {
+      // Simple color mapping based on text content if possible, or random
       const colors: Record<string, string> = {
-        Water: 'blue',
-        Earth: 'orange',
-        Wood: 'green',
-        Fire: 'red',
-        Metal: 'gold',
+        '水': 'blue',
+        '土': 'orange',
+        '木': 'green',
+        '火': 'red',
+        '金': 'gold',
       };
-      const labels: Record<string, string> = {
-        Water: '水',
-        Earth: '土',
-        Wood: '木',
-        Fire: '火',
-        Metal: '金',
-      };
-      return <Tag color={colors[text] || 'default'}>{labels[text] || text}</Tag>;
+      // Try to match partial text
+      let color = 'default';
+      for (const key in colors) {
+        if (text.includes(key)) {
+          color = colors[key];
+          break;
+        }
+      }
+      return <Tag color={color}>{text}</Tag>;
     }
   },
   {
@@ -80,17 +135,40 @@ const columns = [
 ];
 //#endregion
 
-function handleDelete(id: number) {
-  zodiacs.value = zodiacs.value.filter(item => item.id !== id);
+async function handleDelete(id: number) {
+  const { error } = await fetchDeleteZodiac(id);
+  if (!error) {
+    message.success('删除成功');
+    fetchData();
+  }
 }
 
 const elementColors: Record<string, string> = {
-  Water: 'text-blue-500 bg-blue-50',
-  Earth: 'text-orange-500 bg-orange-50',
-  Wood: 'text-green-500 bg-green-50',
-  Fire: 'text-red-500 bg-red-50',
-  Metal: 'text-yellow-500 bg-yellow-50',
+  '水': 'text-blue-500 bg-blue-50',
+  '土': 'text-orange-500 bg-orange-50',
+  '木': 'text-green-500 bg-green-50',
+  '火': 'text-red-500 bg-red-50',
+  '金': 'text-yellow-500 bg-yellow-50',
 };
+
+function getElementColorClass(element: string) {
+   for (const key in elementColors) {
+        if (element.includes(key)) {
+          return elementColors[key];
+        }
+    }
+    return 'text-gray-500 bg-gray-50';
+}
+
+function getElementTagColor(element: string) {
+    if (element.includes('水')) return 'blue';
+    if (element.includes('土')) return 'orange';
+    if (element.includes('木')) return 'green';
+    if (element.includes('火')) return 'red';
+    if (element.includes('金')) return 'gold';
+    return 'default';
+}
+
 
 // Top cards data (subset of zodiacs for display)
 const topCards = computed(() => zodiacs.value.slice(0, 4));
@@ -100,23 +178,13 @@ const modalVisible = ref(false);
 const modalType = ref<'add' | 'edit'>('add');
 const formRef = ref();
 
-const formModel = reactive<Omit<Zodiac, 'id' | 'tag'>>({
+const formModel = reactive({
   name: '',
   code: '',
-  element: 'Water',
-  generation: '',
-  icon: 'i-mdi:zodiac-leo' // default icon
+  homeType: undefined as number | undefined,
 });
 
 const editingId = ref<number | null>(null);
-
-const elementOptions = [
-  { label: '水 (Water)', value: 'Water' },
-  { label: '土 (Earth)', value: 'Earth' },
-  { label: '木 (Wood)', value: 'Wood' },
-  { label: '火 (Fire)', value: 'Fire' },
-  { label: '金 (Metal)', value: 'Metal' },
-];
 
 function handleAdd() {
   modalType.value = 'add';
@@ -124,9 +192,7 @@ function handleAdd() {
   Object.assign(formModel, {
     name: '',
     code: '',
-    element: 'Water',
-    generation: '',
-    icon: 'i-mdi:zodiac-leo'
+    homeType: undefined,
   });
   modalVisible.value = true;
 }
@@ -137,34 +203,42 @@ function handleEdit(record: Zodiac) {
   Object.assign(formModel, {
     name: record.name,
     code: record.code,
-    element: record.element,
-    generation: record.generation,
-    icon: record.icon
+    homeType: record.homeType,
   });
   modalVisible.value = true;
 }
 
-function handleSubmit() {
-  formRef.value?.validate().then(() => {
+async function handleSubmit() {
+  try {
+    await formRef.value?.validate();
+    
     if (modalType.value === 'add') {
-      const newId = Math.max(...zodiacs.value.map(z => z.id), 0) + 1;
-      const newTag = `#${newId.toString().padStart(2, '0')}`;
-      zodiacs.value.push({
-        id: newId,
-        tag: newTag,
-        ...formModel
+      const { error } = await fetchAddZodiac({
+        zodiacName: formModel.name,
+        zodiacCode: formModel.code,
+        homeType: formModel.homeType!
       });
+      if (!error) {
+        message.success('新增成功');
+        modalVisible.value = false;
+        fetchData();
+      }
     } else if (modalType.value === 'edit' && editingId.value !== null) {
-      const index = zodiacs.value.findIndex(z => z.id === editingId.value);
-      if (index !== -1) {
-        zodiacs.value[index] = {
-          ...zodiacs.value[index],
-          ...formModel
-        };
+      const { error } = await fetchUpdateZodiac({
+        id: editingId.value,
+        zodiacName: formModel.name,
+        zodiacCode: formModel.code,
+        homeType: formModel.homeType!
+      });
+      if (!error) {
+        message.success('修改成功');
+        modalVisible.value = false;
+        fetchData();
       }
     }
-    modalVisible.value = false;
-  });
+  } catch (err) {
+    // Validation failed
+  }
 }
 
 </script>
@@ -198,7 +272,7 @@ function handleSubmit() {
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between  relative overflow-hidden group hover:shadow-md transition-all cursor-pointer" @click="handleEdit(item)">
         <div class="flex justify-between items-start">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center" :class="elementColors[item.element]">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center" :class="getElementColorClass(item.element)">
              <span :class="[item.icon, 'text-xl']"></span> 
           </div>
         </div>
@@ -211,8 +285,8 @@ function handleSubmit() {
           </div>
           <div class="flex justify-between items-center mt-1 text-gray-500 text-xs">
             <span>属</span>
-            <Tag :color="item.element === 'Water' ? 'blue' : item.element === 'Earth' ? 'orange' : 'green'" class="m-0 text-xs px-1">
-                {{ item.element === 'Water' ? '水' : item.element === 'Earth' ? '土' : '木' }}
+            <Tag :color="getElementTagColor(item.element)" class="m-0 text-xs px-1">
+                {{ item.element }}
             </Tag>
           </div>
         </div>
@@ -238,14 +312,8 @@ function handleSubmit() {
         <Form.Item label="代码" name="code" :rules="[{ required: true, message: '请输入代码' }]">
           <Input v-model:value="formModel.code" placeholder="例如：RAT_PRIMARY" />
         </Form.Item>
-        <Form.Item label="生肖代" name="generation" :rules="[{ required: true, message: '请输入生肖代' }]">
-          <Input v-model:value="formModel.generation" placeholder="例如：RAT-01" />
-        </Form.Item>
-        <Form.Item label="归属五行" name="element" :rules="[{ required: true, message: '请选择五行' }]">
-          <Select v-model:value="formModel.element" :options="elementOptions" />
-        </Form.Item>
-        <Form.Item label="图标" name="icon">
-          <Input v-model:value="formModel.icon" placeholder="例如：i-mdi:rodent" />
+        <Form.Item label="归属类型" name="homeType" :rules="[{ required: true, message: '请选择类型' }]">
+          <Select v-model:value="formModel.homeType" :options="homeTypes" placeholder="请选择类型" />
         </Form.Item>
       </Form>
     </Modal>

@@ -1,132 +1,183 @@
 <script setup lang="tsx">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { Card, Button, Modal, Input, message, Popconfirm, Tabs, TabPane, Form, Select, InputNumber } from 'ant-design-vue';
+import { fetchGetZodiacList } from '@/service/api/zodiac';
+import { fetchAddNumber, fetchDeleteNumber } from '@/service/api/number';
 
 interface ZodiacNumber {
   id: number;
   value: string;
-  color?: string;
+  color?: number; // Changed to number to match API
 }
 
 interface Zodiac {
   id: number;
   name: string;
   icon: string;
-  element: string; // For potential styling
+  element: string;
   numbers: ZodiacNumber[];
 }
 
-// Mock Data for 12 Zodiacs
-const zodiacs = ref<Zodiac[]>([
-  { id: 1, name: '子鼠', icon: 'i-mdi:rodent', element: 'Water', numbers: [{ id: 1, value: '01' }, { id: 2, value: '13' }] },
-  { id: 2, name: '丑牛', icon: 'i-mdi:cow', element: 'Earth', numbers: [{ id: 3, value: '02' }, { id: 4, value: '14' }] },
-  { id: 3, name: '寅虎', icon: 'i-mdi:tiger', element: 'Wood', numbers: [{ id: 5, value: '03' }, { id: 6, value: '15' }] },
-  { id: 4, name: '卯兔', icon: 'i-mdi:rabbit', element: 'Wood', numbers: [{ id: 7, value: '04' }] },
-  { id: 5, name: '辰龙', icon: 'i-mdi:dragon', element: 'Earth', numbers: [{ id: 8, value: '05' }] },
-  { id: 6, name: '巳蛇', icon: 'i-mdi:snake', element: 'Fire', numbers: [{ id: 9, value: '06' }] },
-  { id: 7, name: '午马', icon: 'i-mdi:horse', element: 'Fire', numbers: [{ id: 10, value: '07' }] },
-  { id: 8, name: '未羊', icon: 'i-mdi:sheep', element: 'Earth', numbers: [{ id: 11, value: '08' }] },
-  { id: 9, name: '申猴', icon: 'i-mdi:monkey', element: 'Metal', numbers: [{ id: 12, value: '09' }] },
-  { id: 10, name: '酉鸡', icon: 'i-mdi:rooster', element: 'Metal', numbers: [{ id: 13, value: '10' }] },
-  { id: 11, name: '戌狗', icon: 'i-mdi:dog', element: 'Earth', numbers: [{ id: 14, value: '11' }] },
-  { id: 12, name: '亥猪', icon: 'i-mdi:pig', element: 'Water', numbers: [{ id: 15, value: '12' }] },
-]);
+const zodiacs = ref<Zodiac[]>([]);
+const loading = ref(false);
 
-function handleDeleteNumber(zodiacId: number, numberId: number) {
-  const zodiac = zodiacs.value.find(z => z.id === zodiacId);
-  if (zodiac) {
-    zodiac.numbers = zodiac.numbers.filter(n => n.id !== numberId);
+// Icon mapping
+const iconMap: Record<string, string> = {
+  '子鼠': 'i-mdi:rodent',
+  '丑牛': 'i-mdi:cow',
+  '寅虎': 'i-mdi:tiger',
+  '卯兔': 'i-mdi:rabbit',
+  '辰龙': 'i-mdi:dragon',
+  '巳蛇': 'i-mdi:snake',
+  '午马': 'i-mdi:horse',
+  '未羊': 'i-mdi:sheep',
+  '申猴': 'i-mdi:monkey',
+  '酉鸡': 'i-mdi:rooster',
+  '戌狗': 'i-mdi:dog',
+  '亥猪': 'i-mdi:pig'
+};
+
+function getIcon(name: string) {
+  return iconMap[name] || 'i-mdi:zodiac-leo';
+}
+
+async function fetchData() {
+  loading.value = true;
+  try {
+    const { data, error } = await fetchGetZodiacList();
+    if (!error && data) {
+      zodiacs.value = data.map(item => ({
+        id: item.id,
+        name: item.zodiacName,
+        icon: getIcon(item.zodiacName),
+        element: item.homeTypeName || 'Unknown',
+        numbers: item.zodiacNums ? item.zodiacNums.map(num => ({
+          id: num.id,
+          value: num.zodiacNum.toString().padStart(2, '0'),
+          color: num.color
+        })) : []
+      }));
+    }
+  } finally {
+    loading.value = false;
+  }
+}
+
+onMounted(() => {
+  fetchData();
+});
+
+async function handleDeleteNumber(zodiacId: number, numberId: number) {
+  const { error } = await fetchDeleteNumber(numberId);
+  if (!error) {
     message.success('删除成功');
+    fetchData();
   }
 }
 
 // Styling helpers
 const elementBgColors: Record<string, string> = {
-  Water: 'bg-blue-50 hover:bg-blue-100',
-  Earth: 'bg-amber-50 hover:bg-amber-100',
-  Wood: 'bg-green-50 hover:bg-green-100',
-  Fire: 'bg-red-50 hover:bg-red-100',
-  Metal: 'bg-gray-50 hover:bg-gray-100',
+  '水': 'bg-blue-50 hover:bg-blue-100',
+  '土': 'bg-amber-50 hover:bg-amber-100',
+  '木': 'bg-green-50 hover:bg-green-100',
+  '火': 'bg-red-50 hover:bg-red-100',
+  '金': 'bg-gray-50 hover:bg-gray-100',
 };
 
 const elementTextColors: Record<string, string> = {
-  Water: 'text-blue-600',
-  Earth: 'text-amber-600',
-  Wood: 'text-green-600',
-  Fire: 'text-red-600',
-  Metal: 'text-gray-600',
+  '水': 'text-blue-600',
+  '土': 'text-amber-600',
+  '木': 'text-green-600',
+  '火': 'text-red-600',
+  '金': 'text-gray-600',
 };
 
 const elementBorderColors: Record<string, string> = {
-  Water: 'border-blue-200',
-  Earth: 'border-amber-200',
-  Wood: 'border-green-200',
-  Fire: 'border-red-200',
-  Metal: 'border-gray-200',
+  '水': 'border-blue-200',
+  '土': 'border-amber-200',
+  '木': 'border-green-200',
+  '火': 'border-red-200',
+  '金': 'border-gray-200',
 };
+
+function getElementClass(element: string, map: Record<string, string>) {
+    for (const key in map) {
+        if (element.includes(key)) {
+            return map[key];
+        }
+    }
+    return '';
+}
 
 // Color mapping for number balls
-const colorBgMap: Record<string, string> = {
-  '红色': 'bg-red-500',
-  '蓝色': 'bg-blue-500',
-  '绿色': 'bg-green-500'
+// Assuming API returns 1: Red, 2: Blue, 3: Green (Need to verify, but using this for now)
+const colorBgMap: Record<number, string> = {
+  1: 'bg-red-500',
+  2: 'bg-blue-500',
+  3: 'bg-green-500'
 };
 
-const colorTextMap: Record<string, string> = {
-  '红色': 'text-white',
-  '蓝色': 'text-white',
-  '绿色': 'text-white'
+const colorTextMap: Record<number, string> = {
+  1: 'text-white',
+  2: 'text-white',
+  3: 'text-white'
 };
 
 function getNumberColor(num: ZodiacNumber, zodiacElement: string) {
-  if (num.color) {
+  if (num.color && colorBgMap[num.color]) {
     return {
-      bg: colorBgMap[num.color] || elementBgColors[zodiacElement],
-      text: colorTextMap[num.color] || elementTextColors[zodiacElement]
+      bg: colorBgMap[num.color],
+      text: colorTextMap[num.color]
     };
   }
+  // Fallback to element color
+   const bg = getElementClass(zodiacElement, elementBgColors);
+   const text = getElementClass(zodiacElement, elementTextColors);
   return {
-    bg: elementBgColors[zodiacElement],
-    text: elementTextColors[zodiacElement]
+    bg: bg || 'bg-gray-100',
+    text: text || 'text-gray-600'
   };
 }
+
 // Modal state
 const modalVisible = ref(false);
 const currentZodiacId = ref<number | null>(null);
 const formState = reactive({
   number: '',
-  color: '红色'
+  color: 1 // Default to Red (1)
 });
 
 const colorOptions = [
-  { label: '红色', value: '红色' },
-  { label: '蓝色', value: '蓝色' },
-  { label: '绿色', value: '绿色' }
+  { label: '红色', value: 1 },
+  { label: '蓝色', value: 2 },
+  { label: '绿色', value: 3 }
 ];
 
 function openAddModal(zodiacId: number) {
   currentZodiacId.value = zodiacId;
   formState.number = '';
-  formState.color = '红色';
+  formState.color = 1;
   modalVisible.value = true;
 }
 
-function handleAddNumber() {
+async function handleAddNumber() {
   if (!formState.number) {
     message.warning('请输入号码');
     return;
   }
   
-  const zodiac = zodiacs.value.find(z => z.id === currentZodiacId.value);
-  if (zodiac) {
-    const newNumber: ZodiacNumber = {
-      id: Date.now(),
-      value: formState.number,
-      color: formState.color
-    };
-    zodiac.numbers.push(newNumber);
-    message.success('添加成功');
-    modalVisible.value = false;
+  if (currentZodiacId.value !== null) {
+    const { error } = await fetchAddNumber({
+        zodiacId: currentZodiacId.value,
+        zodiacNum: parseInt(formState.number),
+        color: formState.color
+    });
+
+    if (!error) {
+        message.success('添加成功');
+        modalVisible.value = false;
+        fetchData();
+    }
   }
 }
 </script>
@@ -138,13 +189,13 @@ function handleAddNumber() {
         v-for="zodiac in zodiacs" 
         :key="zodiac.id" 
         class="relative rounded-xl border border-solid transition-all duration-300 hover:shadow-lg flex flex-col overflow-hidden bg-white"
-        :class="[elementBorderColors[zodiac.element]]"
+        :class="[getElementClass(zodiac.element, elementBorderColors)]"
       >
         <!-- Header -->
-        <div class="flex justify-between items-center p-3 border-b border-gray-100 border-solid" :class="[elementBgColors[zodiac.element]]">
+        <div class="flex justify-between items-center p-3 border-b border-gray-100 border-solid" :class="[getElementClass(zodiac.element, elementBgColors)]">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-              <span :class="[zodiac.icon, elementTextColors[zodiac.element], 'text-lg']"></span>
+              <span :class="[zodiac.icon, getElementClass(zodiac.element, elementTextColors), 'text-lg']"></span>
             </div>
             <span class="font-bold text-gray-700 text-lg">{{ zodiac.name }}</span>
           </div>
