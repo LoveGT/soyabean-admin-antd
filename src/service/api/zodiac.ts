@@ -1,17 +1,17 @@
-import { request } from '../request';
+import { demoRequest } from '../request';
 
 /** Get zodiac list */
 export function fetchGetZodiacList() {
-  return request<Api.Zodiac.ZodiacList[]>({
-    url: '/sideline/zodiac/zh/list',
+  return demoRequest<Api.Zodiac.ZodiacList[]>({
+    url: '/api/sideline/zodiac/zh/list',
     method: 'get'
   });
 }
 
 /** Add zodiac */
 export function fetchAddZodiac(data: Api.Zodiac.AddZodiacParams) {
-  return request<number>({
-    url: '/sideline/zodiac/zh/add',
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/zh/add',
     method: 'post',
     data
   });
@@ -19,8 +19,8 @@ export function fetchAddZodiac(data: Api.Zodiac.AddZodiacParams) {
 
 /** Update zodiac */
 export function fetchUpdateZodiac(data: Api.Zodiac.UpdateZodiacParams) {
-  return request<number>({
-    url: '/sideline/zodiac/zh/update',
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/zh/update',
     method: 'post',
     data
   });
@@ -28,8 +28,8 @@ export function fetchUpdateZodiac(data: Api.Zodiac.UpdateZodiacParams) {
 
 /** Delete zodiac */
 export function fetchDeleteZodiac(id: number) {
-  return request<boolean>({
-    url: '/sideline/zodiac/zh/delete',
+  return demoRequest<boolean>({
+    url: '/api/sideline/zodiac/zh/delete',
     method: 'get',
     params: { id }
   });
@@ -37,8 +37,8 @@ export function fetchDeleteZodiac(id: number) {
 
 /** Get zodiac home type */
 export function fetchGetZodiacHomeType() {
-  return request<Api.Zodiac.HomeType[]>({
-    url: '/sideline/zodiac/zh/home-type',
+  return demoRequest<Api.Zodiac.HomeType[]>({
+    url: '/api/sideline/zodiac/zh/home-type',
     method: 'get'
   });
 }

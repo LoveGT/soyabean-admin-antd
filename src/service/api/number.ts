@@ -1,9 +1,9 @@
-import { request } from '../request';
+import { demoRequest } from '../request';
 
 /** Add zodiac number */
 export function fetchAddNumber(data: Api.Number.AddNumberParams) {
-  return request<number>({
-    url: '/sideline/zodiac/num/add',
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/num/add',
     method: 'post',
     data
   });
@@ -11,8 +11,8 @@ export function fetchAddNumber(data: Api.Number.AddNumberParams) {
 
 /** Delete zodiac number */
 export function fetchDeleteNumber(id: number) {
-  return request<boolean>({
-    url: '/sideline/zodiac/num/delete',
+  return demoRequest<boolean>({
+    url: '/api/sideline/zodiac/num/delete',
     method: 'get',
     params: { id }
   });

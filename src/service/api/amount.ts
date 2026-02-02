@@ -1,9 +1,9 @@
-import { request } from '../request';
+import { demoRequest } from '../request';
 
 /** Get amount list */
 export function fetchGetAmountList(data: Api.Amount.AmountListParams) {
-  return request<Api.Amount.AmountListResponse>({
-    url: '/sideline/zodiac/record/list',
+  return demoRequest<Api.Amount.AmountListResponse>({
+    url: '/api/sideline/zodiac/record/list',
     method: 'post',
     data
   });
@@ -11,8 +11,8 @@ export function fetchGetAmountList(data: Api.Amount.AmountListParams) {
 
 /** Add amount by number */
 export function fetchAddAmountByNum(data: Api.Amount.AddAmountByNumParams) {
-  return request<number>({
-    url: '/sideline/zodiac/record/add-by-num',
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/record/add-by-num',
     method: 'post',
     data
   });
@@ -20,8 +20,8 @@ export function fetchAddAmountByNum(data: Api.Amount.AddAmountByNumParams) {
 
 /** Add amount by zodiac */
 export function fetchAddAmountByZodiac(data: Api.Amount.AddAmountByZodiacParams) {
-  return request<number>({
-    url: '/sideline/zodiac/record/add-by-zodiac',
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/record/add-by-zodiac',
     method: 'post',
     data
   });
@@ -29,8 +29,8 @@ export function fetchAddAmountByZodiac(data: Api.Amount.AddAmountByZodiacParams)
 
 /** Add amount custom */
 export function fetchAddAmountCustom(data: Api.Amount.AddAmountCustomParams) {
-  return request<number>({
-    url: '/sideline/zodiac/record/add-by-custom',
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/record/add-by-custom',
     method: 'post',
     data
   });
@@ -38,7 +38,7 @@ export function fetchAddAmountCustom(data: Api.Amount.AddAmountCustomParams) {
 
 /** Delete amount */
 export function fetchDeleteAmount(id: number) {
-  return request<boolean>({
+  return demoRequest<boolean>({
     url: '/sideline/zodiac/record/delete',
     method: 'get',
     params: { id }
