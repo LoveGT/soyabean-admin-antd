@@ -23,18 +23,18 @@ const loading = ref(false);
 
 // Icon mapping
 const iconMap: Record<string, string> = {
-  '子鼠': 'i-mdi:rodent',
-  '丑牛': 'i-mdi:cow',
-  '寅虎': 'i-mdi:tiger',
-  '卯兔': 'i-mdi:rabbit',
-  '辰龙': 'i-mdi:dragon',
-  '巳蛇': 'i-mdi:snake',
-  '午马': 'i-mdi:horse',
-  '未羊': 'i-mdi:sheep',
-  '申猴': 'i-mdi:monkey',
-  '酉鸡': 'i-mdi:rooster',
-  '戌狗': 'i-mdi:dog',
-  '亥猪': 'i-mdi:pig'
+  '子鼠': 'mdi:rodent',
+  '丑牛': 'mdi:cow',
+  '寅虎': 'mdi:tiger',
+  '卯兔': 'mdi:rabbit',
+  '辰龙': 'mdi:dragon',
+  '巳蛇': 'mdi:snake',
+  '午马': 'mdi:horse',
+  '未羊': 'mdi:sheep',
+  '申猴': 'mdi:monkey',
+  '酉鸡': 'mdi:rooster',
+  '戌狗': 'mdi:dog',
+  '亥猪': 'mdi:pig'
 };
 
 function getIcon(name: string) {
@@ -44,20 +44,18 @@ function getIcon(name: string) {
 async function fetchData() {
   loading.value = true;
   try {
-    const { data, error } = await fetchGetZodiacList();
-    if (!error && data) {
-      zodiacs.value = data.map(item => ({
-        id: item.id,
-        name: item.zodiacName,
-        icon: getIcon(item.zodiacName),
-        element: item.homeTypeName || 'Unknown',
-        numbers: item.zodiacNums ? item.zodiacNums.map(num => ({
-          id: num.id,
-          value: num.zodiacNum.toString().padStart(2, '0'),
-          color: num.color
-        })) : []
-      }));
-    }
+    const res = await fetchGetZodiacList();
+    zodiacs.value = res.map(item => ({
+      id: item.id,
+      name: item.zodiacName,
+      icon: getIcon(item.zodiacName),
+      element: item.homeTypeName || 'Unknown',
+      numbers: item.zodiacNums ? item.zodiacNums.map(num => ({
+        id: num.id,
+        value: num.zodiacNum.toString().padStart(2, '0'),
+        color: num.color
+      })) : []
+    }));
   } finally {
     loading.value = false;
   }
@@ -101,12 +99,12 @@ const elementBorderColors: Record<string, string> = {
 };
 
 function getElementClass(element: string, map: Record<string, string>) {
-    for (const key in map) {
-        if (element.includes(key)) {
-            return map[key];
-        }
+  for (const key in map) {
+    if (element.includes(key)) {
+      return map[key];
     }
-    return '';
+  }
+  return '';
 }
 
 // Color mapping for number balls
@@ -131,8 +129,8 @@ function getNumberColor(num: ZodiacNumber, zodiacElement: string) {
     };
   }
   // Fallback to element color
-   const bg = getElementClass(zodiacElement, elementBgColors);
-   const text = getElementClass(zodiacElement, elementTextColors);
+  const bg = getElementClass(zodiacElement, elementBgColors);
+  const text = getElementClass(zodiacElement, elementTextColors);
   return {
     bg: bg || 'bg-gray-100',
     text: text || 'text-gray-600'
@@ -159,24 +157,34 @@ function openAddModal(zodiacId: number) {
   formState.color = 1;
   modalVisible.value = true;
 }
+function onClick({ key }) {
+  console.log(key);
+  if (key === 'add') {
+    openAddModal(currentZodiacId.value || 0);
+  } else if (key === 'edit') {
+    // Handle edit
+  } else if (key === 'delete') {
+    // Handle delete
+  }
+}
 
 async function handleAddNumber() {
   if (!formState.number) {
     message.warning('请输入号码');
     return;
   }
-  
+
   if (currentZodiacId.value !== null) {
     const { error } = await fetchAddNumber({
-        zodiacId: currentZodiacId.value,
-        zodiacNum: parseInt(formState.number),
-        color: formState.color
+      zodiacId: currentZodiacId.value,
+      zodiacNum: parseInt(formState.number),
+      color: formState.color
     });
 
     if (!error) {
-        message.success('添加成功');
-        modalVisible.value = false;
-        fetchData();
+      message.success('添加成功');
+      modalVisible.value = false;
+      fetchData();
     }
   }
 }
@@ -185,68 +193,71 @@ async function handleAddNumber() {
 <template>
   <div class="p-4">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      <div 
-        v-for="zodiac in zodiacs" 
-        :key="zodiac.id" 
+      <div v-for="zodiac in zodiacs" :key="zodiac.id"
         class="relative rounded-xl border border-solid transition-all duration-300 hover:shadow-lg flex flex-col overflow-hidden bg-white"
-        :class="[getElementClass(zodiac.element, elementBorderColors)]"
-      >
+        :class="[getElementClass(zodiac.element, elementBorderColors)]">
         <!-- Header -->
-        <div class="flex justify-between items-center p-3 border-b border-gray-100 border-solid" :class="[getElementClass(zodiac.element, elementBgColors)]">
+        <div class="flex justify-between items-center p-3 border-b border-gray-100 border-solid"
+          :class="[getElementClass(zodiac.element, elementBgColors)]">
           <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-              <span :class="[zodiac.icon, getElementClass(zodiac.element, elementTextColors), 'text-lg']"></span>
+            <div class="w-20 h-20 rounded-xl border border-[#e62133] flex items-center justify-center">
+              <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
+              <svg-icon class="text-18 text-[#e62133]" :icon="zodiac.icon" />
             </div>
+
             <span class="font-bold text-gray-700 text-lg">{{ zodiac.name }}</span>
           </div>
-          <Button 
-            type="primary" 
-            shape="circle" 
-            size="small" 
-            class="shadow-sm"
-            @click="openAddModal(zodiac.id)"
-          >
-            <template #icon>
-              <span class="i-ant-design:plus-outlined"></span>
-              +
+          <a-dropdown>
+            <div>
+              <svg-icon class="text-16px text-[#8c96ff]" icon="zmdi:more" />
+            </div>
+            <template #overlay>
+              <a-menu @click="onClick">
+                <a-menu-item key="add">
+                  新增
+                </a-menu-item>
+                <a-menu-item key="edit">
+                  编辑
+                </a-menu-item>
+                <a-menu-item key="delete">
+                  删除
+                </a-menu-item>
+              </a-menu>
             </template>
-          </Button>
+          </a-dropdown>
         </div>
 
         <!-- Content -->
         <div class="p-4 flex-1 min-h-120px bg-white">
           <div class="flex flex-wrap gap-4">
-            <div 
-              v-for="num in zodiac.numbers" 
-              :key="num.id" 
-              class="group relative"
-            >
+            <div v-for="num in zodiac.numbers" :key="num.id" class="group relative">
               <!-- Number Circle -->
-              <div 
+              <div
                 class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm border border-gray-100 transition-transform hover:scale-105 select-none"
-                :class="[getNumberColor(num, zodiac.element).bg, getNumberColor(num, zodiac.element).text]"
-              >
+                :class="[getNumberColor(num, zodiac.element).bg, getNumberColor(num, zodiac.element).text]">
                 {{ num.value }}
               </div>
-              
+
               <!-- Delete Badge -->
               <Popconfirm title="确定删除该号码?" @confirm="handleDeleteNumber(zodiac.id, num.id)">
-                <div class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10 hover:bg-red-600">
+                <div
+                  class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10 hover:bg-red-600">
                   <span class="i-ant-design:minus-outlined text-xs"></span>
                   -
                 </div>
               </Popconfirm>
             </div>
-            
+
             <!-- Empty State if no numbers -->
-            <div v-if="zodiac.numbers.length === 0" class="w-full h-full flex items-center justify-center text-gray-300 text-sm py-4">
+            <div v-if="zodiac.numbers.length === 0"
+              class="w-full h-full flex items-center justify-center text-gray-300 text-sm py-4">
               暂无号码
             </div>
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- Add Number Modal -->
     <Modal v-model:open="modalVisible" title="录入号码" @ok="handleAddNumber" destroyOnClose width="500px">
       <Form layout="vertical" class="mt-4">

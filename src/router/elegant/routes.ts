@@ -66,6 +66,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         component: 'view.base_amount',
         meta: {
           title: 'base_amount',
+          order: 3,
           i18nKey: 'route.base_amount'
         }
       },

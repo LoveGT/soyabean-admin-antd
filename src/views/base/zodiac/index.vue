@@ -21,22 +21,22 @@ const loading = ref(false);
 
 // Icon mapping based on zodiac name (fallback)
 const iconMap: Record<string, string> = {
-  '子鼠': 'i-mdi:rodent',
-  '丑牛': 'i-mdi:cow',
-  '寅虎': 'i-mdi:tiger',
-  '卯兔': 'i-mdi:rabbit',
-  '辰龙': 'i-mdi:dragon',
-  '巳蛇': 'i-mdi:snake',
-  '午马': 'i-mdi:horse',
-  '未羊': 'i-mdi:sheep',
-  '申猴': 'i-mdi:monkey',
-  '酉鸡': 'i-mdi:rooster',
-  '戌狗': 'i-mdi:dog',
-  '亥猪': 'i-mdi:pig'
+  '子鼠': 'mdi:rodent',
+  '丑牛': 'mdi:cow',
+  '寅虎': 'mdi:tiger',
+  '卯兔': 'mdi:rabbit',
+  '辰龙': 'mdi:dragon',
+  '巳蛇': 'mdi:snake',
+  '午马': 'mdi:horse',
+  '未羊': 'mdi:sheep',
+  '申猴': 'mdi:monkey',
+  '酉鸡': 'mdi:rooster',
+  '戌狗': 'mdi:dog',
+  '亥猪': 'mdi:pig'
 };
 
 function getIcon(name: string) {
-  return iconMap[name] || 'i-mdi:zodiac-leo';
+  return iconMap[name] || 'mdi:zodiac-leo';
 }
 
 // Fetch Data
@@ -207,9 +207,9 @@ async function handleSubmit() {
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between  relative overflow-hidden group hover:shadow-md transition-all cursor-pointer">
         <div class="flex justify-between items-start">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center" :class="getElementColorClass(item.element)">
+          <div class="w-20 h-20 rounded-xl border border-[#e62133] flex items-center justify-center">
              <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
-             <svg-icon class="text-xl" :icon="item.icon" />
+             <svg-icon class="text-18 text-[#e62133]" :icon="item.icon" />
           </div>
           <Popconfirm title="确定要删除吗?" @confirm="handleDelete(item.id)">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer" @click.stop>
