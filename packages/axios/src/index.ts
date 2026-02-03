@@ -51,11 +51,10 @@ function createCommonRequest<ResponseData = any>(
   instance.interceptors.response.use(
     async response => {
       const responseType: ResponseType = (response.config?.responseType as ResponseType) || 'json';
-
       if (responseType !== 'json' || opts.isBackendSuccess(response)) {
         return Promise.resolve(response);
       }
-
+      
       const fail = await opts.onBackendFail(response, instance);
       if (fail) {
         return fail;

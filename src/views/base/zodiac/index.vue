@@ -43,19 +43,17 @@ function getIcon(name: string) {
 async function fetchData() {
   loading.value = true;
   try {
-    const { data, error } = await fetchGetZodiacList();
-    if (!error && data) {
-      zodiacs.value = data.map(item => ({
-        id: item.id,
-        tag: `#${item.id.toString().padStart(2, '0')}`,
-        name: item.zodiacName,
-        code: item.zodiacCode,
-        element: item.homeTypeName || 'Unknown',
-        homeType: item.homeType,
-        generation: item.zodiacCode, // Using code as generation for now
-        icon: getIcon(item.zodiacName)
-      }));
-    }
+    const res = await fetchGetZodiacList();
+    zodiacs.value = res.map(item => ({
+      id: item.id,
+      tag: `#${item.id.toString().padStart(2, '0')}`,
+      name: item.zodiacName,
+      code: item.zodiacCode,
+      element: item.homeTypeName || 'Unknown',
+      homeType: item.homeType,
+      generation: item.zodiacCode, // Using code as generation for now
+      icon: getIcon(item.zodiacName)
+    }));
   } finally {
     loading.value = false;
   }
@@ -64,10 +62,9 @@ async function fetchData() {
 // Fetch Home Types
 const homeTypes = ref<{ label: string; value: number }[]>([]);
 async function fetchHomeTypes() {
-  const { data, error } = await fetchGetZodiacHomeType();
-  if (!error && data) {
-    homeTypes.value = data.map(item => ({ label: item.name, value: item.value }));
-  }
+  const res = await fetchGetZodiacHomeType();
+  console.log(res, '========');
+  homeTypes.value = res.map(item => ({ label: item.name, value: item.value }));
 }
 
 onMounted(() => {
@@ -75,72 +72,10 @@ onMounted(() => {
   fetchHomeTypes();
 });
 
-//#region Columns
-const columns = [
-  {
-    title: '标识',
-    dataIndex: 'tag',
-    key: 'tag',
-    customRender: ({ text }: { text: string }) => <span class="text-gray-400">{text}</span>
-  },
-  {
-    title: '名称',
-    dataIndex: 'name',
-    key: 'name',
-    customRender: ({ text }: { text: string }) => <span class="font-bold">{text}</span>
-  },
-  {
-    title: '代码',
-    dataIndex: 'code',
-    key: 'code',
-  },
-  {
-    title: '归属五行',
-    dataIndex: 'element',
-    key: 'element',
-    customRender: ({ text }: { text: string }) => {
-      // Simple color mapping based on text content if possible, or random
-      const colors: Record<string, string> = {
-        '水': 'blue',
-        '土': 'orange',
-        '木': 'green',
-        '火': 'red',
-        '金': 'gold',
-      };
-      // Try to match partial text
-      let color = 'default';
-      for (const key in colors) {
-        if (text.includes(key)) {
-          color = colors[key];
-          break;
-        }
-      }
-      return <Tag color={color}>{text}</Tag>;
-    }
-  },
-  {
-    title: '操作',
-    key: 'action',
-    align: 'right',
-    customRender: ({ record }: { record: Zodiac }) => (
-      <div class="flex justify-end gap-2">
-        <Button type="link" size="small" class="p-0" onClick={() => handleEdit(record)}>编辑</Button>
-        <span class="text-gray-300">|</span>
-        <Popconfirm title="确定要删除吗?" onConfirm={() => handleDelete(record.id)}>
-          <Button type="link" danger size="small" class="p-0">删除</Button>
-        </Popconfirm>
-      </div>
-    )
-  }
-];
-//#endregion
-
 async function handleDelete(id: number) {
-  const { error } = await fetchDeleteZodiac(id);
-  if (!error) {
-    message.success('删除成功');
-    fetchData();
-  }
+  const res = await fetchDeleteZodiac(id);
+  message.success( res.message || '删除成功');
+  fetchData();
 }
 
 const elementColors: Record<string, string> = {
@@ -263,21 +198,27 @@ async function handleSubmit() {
         <!-- <h3 class="font-bold text-lg m-0">所有列表</h3> -->
         <Input v-model:value="searchText" placeholder="搜索生肖..." class="w-200px">
           <template #suffix>
-            <span class="i-ant-design:search-outlined text-gray-400"></span>
+            <icon-ant-design:search-outlined class="text-gray-400" />
           </template>
         </Input>
       </div>
     </ACard>
     <!-- Cards Section -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between  relative overflow-hidden group hover:shadow-md transition-all cursor-pointer" @click="handleEdit(item)">
+      <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between  relative overflow-hidden group hover:shadow-md transition-all cursor-pointer">
         <div class="flex justify-between items-start">
           <div class="w-10 h-10 rounded-full flex items-center justify-center" :class="getElementColorClass(item.element)">
-             <span :class="[item.icon, 'text-xl']"></span> 
+             <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
+             <svg-icon class="text-xl" :icon="item.icon" />
           </div>
+          <Popconfirm title="确定要删除吗?" @confirm="handleDelete(item.id)">
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer" @click.stop>
+              <icon-ant-design:delete-outlined />
+            </div>
+          </Popconfirm>
         </div>
         
-        <div class="mt-4">
+        <div class="mt-4" @click="handleEdit(item)">
           <h3 class="font-bold text-lg">{{ item.name }}</h3>
           <div class="flex justify-between items-center mt-2 text-gray-500 text-xs">
             <span>生 肖 代</span>

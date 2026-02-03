@@ -14,7 +14,8 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
   {
     baseURL,
     headers: {
-      apifoxToken: 'XL299LiMEDZ0H5h3A29PxwQXdMJqWyY2'
+      apifoxToken: 'XL299LiMEDZ0H5h3A29PxwQXdMJqWyY2',
+      'ngrok-skip-browser-warning': 'true'
     }
   },
   {
@@ -124,7 +125,10 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
 
 export const demoRequest = createRequest<App.Service.DemoResponse>(
   {
-    baseURL: otherBaseURL.demo
+    baseURL: otherBaseURL.demo,
+    headers: {
+      'ngrok-skip-browser-warning': 'true'
+    }
   },
   {
     async onRequest(config) {
@@ -138,16 +142,16 @@ export const demoRequest = createRequest<App.Service.DemoResponse>(
       return config;
     },
     isBackendSuccess(response) {
-      // when the backend response code is "200", it means the request is success
+      // when the backend response code is 0, it means the request is success
       // you can change this logic by yourself
-      return response.data.status === '200';
+      return response.data.code === 0;
     },
     async onBackendFail(_response) {
       // when the backend response code is not "200", it means the request is fail
       // for example: the token is expired, refresh token and retry request
     },
     transformBackendResponse(response) {
-      return response.data.result;
+      return response.data.data;
     },
     onError(error) {
       // when the request is fail, you can show error message
