@@ -7,11 +7,11 @@ import { fetchGetAmountList, fetchAddAmountByNum, fetchAddAmountByZodiac, fetchA
 
 // Data Interfaces
 interface AmountRecord {
-  id: number;
-  zodiacName: string;
-  zodiacNum: number | string; // API returns number, custom might be string?
-  amount: number;
-  // date: string; // API doesn't return date yet
+    id: number;
+    zodiacName: string;
+    zodiacNum: number | string; // API returns number, custom might be string?
+    amount: number;
+    // date: string; // API doesn't return date yet
 }
 
 const data = ref<AmountRecord[]>([]);
@@ -39,9 +39,9 @@ const columns = [
         customRender: ({ text }: { text: number | string }) => {
             if (!text && text !== 0) return '-';
             const numStr = text.toString();
-             // If it's a long string (custom content), just show it
+            // If it's a long string (custom content), just show it
             if (numStr.length > 10 && isNaN(Number(numStr))) {
-                 return <span>{numStr}</span>;
+                return <span>{numStr}</span>;
             }
             return <Tag color="blue">{numStr.padStart(2, '0')}</Tag>;
         }
@@ -63,7 +63,7 @@ const columns = [
         key: 'action',
         align: 'center',
         customRender: ({ record }: { record: AmountRecord }) => (
-             <Popconfirm title="确定删除吗?" onConfirm={() => handleDelete(record.id)}>
+            <Popconfirm title="确定删除吗?" onConfirm={() => handleDelete(record.id)}>
                 <Button type="link" danger>删除</Button>
             </Popconfirm>
         )
@@ -76,133 +76,120 @@ const activeTab = ref('1');
 const currentZodiacId = ref<number | null>(null);
 
 const formState = reactive({
-  numbers: '',
-  amount: null as number | null,
-  selectedZodiacs: [] as number[],
-  customContent: ''
+    numbers: '',
+    amount: null as number | null,
+    selectedZodiacs: [] as number[],
+    customContent: ''
 });
 
 // Zodiac Options
 const zodiacOptions = ref<{ label: string; value: number }[]>([]);
 
 async function fetchZodiacs() {
-  const { data, error } = await fetchGetZodiacList();
-  if (!error && data) {
-    zodiacOptions.value = data.map(z => ({ label: z.zodiacName, value: z.id }));
-  }
+    const res = await fetchGetZodiacList();
+    zodiacOptions.value = res.map(z => ({ label: z.zodiacName, value: z.id }));
 }
 
 async function fetchData(page = 1) {
-  loading.value = true;
-  try {
-    const { data: res, error } = await fetchGetAmountList({
-      pageIndex: page,
-      pageSize: pageSize.value,
-      params: {
-        // numGroup: '', // Optional filters
-        // startTime: searchDate.value ? searchDate.value.startOf('day').valueOf() : undefined,
-        // endTime: searchDate.value ? searchDate.value.endOf('day').valueOf() : undefined,
-      }
-    });
-    
-    if (!error && res) {
-      data.value = res.data.map(item => ({
-        id: item.id,
-        zodiacName: item.zodiacName,
-        zodiacNum: item.zodiacNum,
-        amount: item.amount
-      }));
-      total.value = res.total;
-      currentPage.value = res.current || page;
+    loading.value = true;
+    try {
+        const res = await fetchGetAmountList({
+            pageIndex: page,
+            pageSize: pageSize.value,
+            params: {
+                // numGroup: '', // Optional filters
+                // startTime: searchDate.value ? searchDate.value.startOf('day').valueOf() : undefined,
+                // endTime: searchDate.value ? searchDate.value.endOf('day').valueOf() : undefined,
+            }
+        });
+
+        data.value = res.data.map(item => ({
+            id: item.id,
+            zodiacName: item.zodiacName,
+            zodiacNum: item.zodiacNum,
+            amount: item.amount
+        }));
+        total.value = res.total;
+        currentPage.value = res.current || page;
+    } finally {
+        loading.value = false;
     }
-  } finally {
-    loading.value = false;
-  }
 }
 
 onMounted(() => {
-  fetchZodiacs();
-  fetchData();
+    fetchZodiacs();
+    fetchData();
 });
 
 function openAddModal(zodiacId?: number) {
-  // Reset form
-  formState.numbers = '';
-  formState.amount = null;
-  formState.selectedZodiacs = typeof zodiacId === 'number' ? [zodiacId] : [];
-  formState.customContent = '';
-  
-  // Default to Tab 2 if opening from a specific zodiac (if passed), else Tab 1
-  activeTab.value = typeof zodiacId === 'number' ? '2' : '1';
-  
-  modalVisible.value = true;
+    // Reset form
+    formState.numbers = '';
+    formState.amount = null;
+    formState.selectedZodiacs = typeof zodiacId === 'number' ? [zodiacId] : [];
+    formState.customContent = '';
+
+    // Default to Tab 2 if opening from a specific zodiac (if passed), else Tab 1
+    activeTab.value = typeof zodiacId === 'number' ? '2' : '1';
+
+    modalVisible.value = true;
 }
 
 async function addAmount() {
-  if (!formState.amount) {
-      message.warning('请输入金额');
-      return;
-  }
-
-  let error = null;
-
-  if (activeTab.value === '1') {
-    // By Number
-    if (!formState.numbers) {
-      message.warning('请输入号码');
-      return;
-    }
-    // Parse numbers: "01; 02" -> [1, 2]
-    const nums = formState.numbers.replace(/，/g, ',').split(/[,; ]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
-    if (nums.length === 0) {
-        message.warning('请输入有效的号码');
+    if (!formState.amount) {
+        message.warning('请输入金额');
         return;
     }
-    
-    const res = await fetchAddAmountByNum([{
-        zodiacNums: nums,
-        amount: formState.amount
-    }]);
-    error = res.error;
 
-  } else if (activeTab.value === '2') {
-    // By Zodiac
-    if (formState.selectedZodiacs.length === 0) {
-      message.warning('请选择生肖');
-      return;
-    }
-    const res = await fetchAddAmountByZodiac([{
-        zodiacIds: formState.selectedZodiacs,
-        amount: formState.amount
-    }]);
-    error = res.error;
+    if (activeTab.value === '1') {
+        // By Number
+        if (!formState.numbers) {
+            message.warning('请输入号码');
+            return;
+        }
+        // Parse numbers: "01; 02" -> [1, 2]
+        const nums = formState.numbers.replace(/，/g, ',').split(/[,; ]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
+        if (nums.length === 0) {
+            message.warning('请输入有效的号码');
+            return;
+        }
 
-  } else {
-    // Custom
-    if (!formState.customContent) {
-        message.warning('请输入内容');
-        return;
+        const res = await fetchAddAmountByNum([{
+            zodiacNums: nums,
+            amount: formState.amount
+        }]);
+
+    } else if (activeTab.value === '2') {
+        // By Zodiac
+        if (formState.selectedZodiacs.length === 0) {
+            message.warning('请选择生肖');
+            return;
+        }
+        const res = await fetchAddAmountByZodiac([{
+            zodiacIds: formState.selectedZodiacs,
+            amount: formState.amount
+        }]);
+
+    } else {
+        // Custom
+        if (!formState.customContent) {
+            message.warning('请输入内容');
+            return;
+        }
+        const res = await fetchAddAmountCustom([{
+            content: formState.customContent,
+            amount: formState.amount
+        }]);
     }
-    const res = await fetchAddAmountCustom([{
-        content: formState.customContent,
-        amount: formState.amount
-    }]);
-    error = res.error;
-  }
-  
-  if (!error) {
+
     message.success('录入成功');
     modalVisible.value = false;
     fetchData();
-  }
 }
 
 async function handleDelete(id: number) {
-    const { error } = await fetchDeleteAmount(id);
-    if (!error) {
-        message.success('删除成功');
-        fetchData();
-    }
+    await fetchDeleteAmount(id);
+    message.success('删除成功');
+    fetchData();
 }
 
 function handleSearch() {
@@ -256,18 +243,12 @@ function handlePageChange(page: number) {
             </Button>
         </div>
         <Card :bordered="false" class="card-wrapper" :body-style="{ padding: '0px' }">
-            <Table 
-                :columns="columns" 
-                :data-source="data" 
-                :pagination="{ 
-                    current: currentPage, 
-                    pageSize: pageSize, 
-                    total: total,
-                    onChange: handlePageChange
-                }" 
-                row-key="id" 
-                :loading="loading"
-            />
+            <Table :columns="columns" :data-source="data" :pagination="{
+                current: currentPage,
+                pageSize: pageSize,
+                total: total,
+                onChange: handlePageChange
+            }" row-key="id" :loading="loading" />
         </Card>
         <!-- Add Number Modal -->
         <Modal v-model:open="modalVisible" title="录入金额" @ok="addAmount" destroyOnClose width="600px">

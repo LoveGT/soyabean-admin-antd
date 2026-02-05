@@ -270,6 +270,17 @@ declare namespace Api {
       zodiacNum: number;
       color: number;
     }
+
+    interface UpdateNumberParams extends AddNumberParams {
+        id: number;
+    }
+
+    interface NumberDetail {
+      id: number;
+      zodiacId: number;
+      zodiacNum: number;
+      color: number;
+    }
   }
 
   /**

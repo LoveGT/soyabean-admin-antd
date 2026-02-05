@@ -36,101 +36,101 @@ const iconMap: Record<string, string> = {
 };
 
 function getIcon(name: string) {
-  return iconMap[name] || 'mdi:zodiac-leo';
+  return iconMap[name] || 'rat';
 }
 
 // Fetch Data
 async function fetchData() {
   loading.value = true;
   try {
-    // const res = await fetchGetZodiacList();
+    const res = await fetchGetZodiacList();
     // 模拟下生肖列表数据
-    const res = [
-      {
-        id: 1,
-        zodiacName: '子鼠',
-        zodiacCode: 'rat',
-        homeType: 1,
-        homeTypeName: '水'
-      },
-      {
-        id: 2,
-        zodiacName: '丑牛',
-        zodiacCode: 'ox',
-        homeType: 2,
-        homeTypeName: '土'
-      },
-      {
-        id: 3,
-        zodiacName: '寅虎',
-        zodiacCode: 'tiger',
-        homeType: 3,
-        homeTypeName: '木'
-      },
-      {
-        id: 4,
-        zodiacName: '卯兔',
-        zodiacCode: 'rabbit',
-        homeType: 4,
-        homeTypeName: '火'
-      },
-      {
-        id: 5,
-        zodiacName: '辰龙',
-        zodiacCode: 'dragon',
-        homeType: 5,
-        homeTypeName: '金'
-      },
-      {
-        id: 6,
-        zodiacName: '巳蛇',
-        zodiacCode: 'snake',
-        homeType: 6,
-        homeTypeName: '水'
-      },
-      {
-        id: 7,
-        zodiacName: '午马',
-        zodiacCode: 'horse',
-        homeType: 7,
-        homeTypeName: '土'
-      },
-      {
-        id: 8,
-        zodiacName: '未羊',
-        zodiacCode: 'sheep',
-        homeType: 8,
-        homeTypeName: '木'
-      },
-      {
-        id: 9,
-        zodiacName: '申猴',
-        zodiacCode: 'monkey',
-        homeType: 9,
-        homeTypeName: '火'
-      },
-      {
-        id: 10,
-        zodiacName: '酉鸡',
-        zodiacCode: 'rooster',
-        homeType: 10,
-        homeTypeName: '金'
-      },
-      {
-        id: 11,
-        zodiacName: '戌狗',
-        zodiacCode: 'dog',
-        homeType: 11,
-        homeTypeName: '水'
-      },
-      {
-        id: 12,
-        zodiacName: '亥猪',
-        zodiacCode: 'pig',
-        homeType: 12,
-        homeTypeName: '土'
-      }
-    ];
+    // const res = [
+    //   {
+    //     id: 1,
+    //     zodiacName: '子鼠',
+    //     zodiacCode: 'rat',
+    //     homeType: 1,
+    //     homeTypeName: '水'
+    //   },
+    //   {
+    //     id: 2,
+    //     zodiacName: '丑牛',
+    //     zodiacCode: 'ox',
+    //     homeType: 2,
+    //     homeTypeName: '土'
+    //   },
+    //   {
+    //     id: 3,
+    //     zodiacName: '寅虎',
+    //     zodiacCode: 'tiger',
+    //     homeType: 3,
+    //     homeTypeName: '木'
+    //   },
+    //   {
+    //     id: 4,
+    //     zodiacName: '卯兔',
+    //     zodiacCode: 'rabbit',
+    //     homeType: 4,
+    //     homeTypeName: '火'
+    //   },
+    //   {
+    //     id: 5,
+    //     zodiacName: '辰龙',
+    //     zodiacCode: 'dragon',
+    //     homeType: 5,
+    //     homeTypeName: '金'
+    //   },
+    //   {
+    //     id: 6,
+    //     zodiacName: '巳蛇',
+    //     zodiacCode: 'snake',
+    //     homeType: 6,
+    //     homeTypeName: '水'
+    //   },
+    //   {
+    //     id: 7,
+    //     zodiacName: '午马',
+    //     zodiacCode: 'horse',
+    //     homeType: 7,
+    //     homeTypeName: '土'
+    //   },
+    //   {
+    //     id: 8,
+    //     zodiacName: '未羊',
+    //     zodiacCode: 'sheep',
+    //     homeType: 8,
+    //     homeTypeName: '木'
+    //   },
+    //   {
+    //     id: 9,
+    //     zodiacName: '申猴',
+    //     zodiacCode: 'monkey',
+    //     homeType: 9,
+    //     homeTypeName: '火'
+    //   },
+    //   {
+    //     id: 10,
+    //     zodiacName: '酉鸡',
+    //     zodiacCode: 'rooster',
+    //     homeType: 10,
+    //     homeTypeName: '金'
+    //   },
+    //   {
+    //     id: 11,
+    //     zodiacName: '戌狗',
+    //     zodiacCode: 'dog',
+    //     homeType: 11,
+    //     homeTypeName: '水'
+    //   },
+    //   {
+    //     id: 12,
+    //     zodiacName: '亥猪',
+    //     zodiacCode: 'pig',
+    //     homeType: 12,
+    //     homeTypeName: '土'
+    //   }
+    // ];
     zodiacs.value = res.map(item => ({
       id: item.id,
       tag: `#${item.id.toString().padStart(2, '0')}`,
@@ -139,7 +139,7 @@ async function fetchData() {
       element: item.homeTypeName || 'Unknown',
       homeType: item.homeType,
       generation: item.zodiacCode, // Using code as generation for now
-      icon: getIcon(item.zodiacName)
+      icon: getIcon(item.zodiacName) || 'ox'
     }));
   } finally {
     loading.value = false;
@@ -279,7 +279,7 @@ async function handleSubmit() {
       </div>
     </ACard>
     <!-- Cards Section -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between  relative overflow-hidden group hover:shadow-md transition-all cursor-pointer">
         <div class="flex justify-between items-start">
           <div class="w-20 h-20 rounded-xl border border-[#e62133] flex items-center justify-center">

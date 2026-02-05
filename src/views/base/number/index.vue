@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { Card, Button, Modal, Input, message, Popconfirm, Tabs, TabPane, Form, Select, InputNumber } from 'ant-design-vue';
 import { fetchGetZodiacList } from '@/service/api/zodiac';
-import { fetchAddNumber, fetchDeleteNumber } from '@/service/api/number';
+import { fetchAddNumber, fetchDeleteNumber, fetchUpdateNumber, fetchNumberDetail } from '@/service/api/number';
 
 interface ZodiacNumber {
   id: number;
@@ -38,103 +38,103 @@ const iconMap: Record<string, string> = {
 };
 
 function getIcon(name: string) {
-  return iconMap[name] || 'i-mdi:zodiac-leo';
+  return iconMap[name] || 'rat';
 }
 
 async function fetchData() {
   loading.value = true;
   try {
-    // const res = await fetchGetZodiacList();
-     const res = [
-      {
-        id: 1,
-        zodiacName: '子鼠',
-        zodiacCode: 'rat',
-        homeType: 1,
-        homeTypeName: '水'
-      },
-      {
-        id: 2,
-        zodiacName: '丑牛',
-        zodiacCode: 'ox',
-        homeType: 2,
-        homeTypeName: '土'
-      },
-      {
-        id: 3,
-        zodiacName: '寅虎',
-        zodiacCode: 'tiger',
-        homeType: 3,
-        homeTypeName: '木'
-      },
-      {
-        id: 4,
-        zodiacName: '卯兔',
-        zodiacCode: 'rabbit',
-        homeType: 4,
-        homeTypeName: '火'
-      },
-      {
-        id: 5,
-        zodiacName: '辰龙',
-        zodiacCode: 'dragon',
-        homeType: 5,
-        homeTypeName: '金'
-      },
-      {
-        id: 6,
-        zodiacName: '巳蛇',
-        zodiacCode: 'snake',
-        homeType: 6,
-        homeTypeName: '水'
-      },
-      {
-        id: 7,
-        zodiacName: '午马',
-        zodiacCode: 'horse',
-        homeType: 7,
-        homeTypeName: '土'
-      },
-      {
-        id: 8,
-        zodiacName: '未羊',
-        zodiacCode: 'sheep',
-        homeType: 8,
-        homeTypeName: '木'
-      },
-      {
-        id: 9,
-        zodiacName: '申猴',
-        zodiacCode: 'monkey',
-        homeType: 9,
-        homeTypeName: '火'
-      },
-      {
-        id: 10,
-        zodiacName: '酉鸡',
-        zodiacCode: 'rooster',
-        homeType: 10,
-        homeTypeName: '金'
-      },
-      {
-        id: 11,
-        zodiacName: '戌狗',
-        zodiacCode: 'dog',
-        homeType: 11,
-        homeTypeName: '水'
-      },
-      {
-        id: 12,
-        zodiacName: '亥猪',
-        zodiacCode: 'pig',
-        homeType: 12,
-        homeTypeName: '土'
-      }
-    ];
+    const res = await fetchGetZodiacList();
+    //  const res = [
+    //   {
+    //     id: 1,
+    //     zodiacName: '子鼠',
+    //     zodiacCode: 'rat',
+    //     homeType: 1,
+    //     homeTypeName: '水'
+    //   },
+    //   {
+    //     id: 2,
+    //     zodiacName: '丑牛',
+    //     zodiacCode: 'ox',
+    //     homeType: 2,
+    //     homeTypeName: '土'
+    //   },
+    //   {
+    //     id: 3,
+    //     zodiacName: '寅虎',
+    //     zodiacCode: 'tiger',
+    //     homeType: 3,
+    //     homeTypeName: '木'
+    //   },
+    //   {
+    //     id: 4,
+    //     zodiacName: '卯兔',
+    //     zodiacCode: 'rabbit',
+    //     homeType: 4,
+    //     homeTypeName: '火'
+    //   },
+    //   {
+    //     id: 5,
+    //     zodiacName: '辰龙',
+    //     zodiacCode: 'dragon',
+    //     homeType: 5,
+    //     homeTypeName: '金'
+    //   },
+    //   {
+    //     id: 6,
+    //     zodiacName: '巳蛇',
+    //     zodiacCode: 'snake',
+    //     homeType: 6,
+    //     homeTypeName: '水'
+    //   },
+    //   {
+    //     id: 7,
+    //     zodiacName: '午马',
+    //     zodiacCode: 'horse',
+    //     homeType: 7,
+    //     homeTypeName: '土'
+    //   },
+    //   {
+    //     id: 8,
+    //     zodiacName: '未羊',
+    //     zodiacCode: 'sheep',
+    //     homeType: 8,
+    //     homeTypeName: '木'
+    //   },
+    //   {
+    //     id: 9,
+    //     zodiacName: '申猴',
+    //     zodiacCode: 'monkey',
+    //     homeType: 9,
+    //     homeTypeName: '火'
+    //   },
+    //   {
+    //     id: 10,
+    //     zodiacName: '酉鸡',
+    //     zodiacCode: 'rooster',
+    //     homeType: 10,
+    //     homeTypeName: '金'
+    //   },
+    //   {
+    //     id: 11,
+    //     zodiacName: '戌狗',
+    //     zodiacCode: 'dog',
+    //     homeType: 11,
+    //     homeTypeName: '水'
+    //   },
+    //   {
+    //     id: 12,
+    //     zodiacName: '亥猪',
+    //     zodiacCode: 'pig',
+    //     homeType: 12,
+    //     homeTypeName: '土'
+    //   }
+    // ];
     zodiacs.value = res.map(item => ({
       id: item.id,
       name: item.zodiacName,
-      icon: getIcon(item.zodiacName),
+      icon: getIcon(item.zodiacName) || 'ox',
       element: item.homeTypeName || 'Unknown',
       numbers: item.zodiacNums ? item.zodiacNums.map(num => ({
         id: num.id,
@@ -152,11 +152,9 @@ onMounted(() => {
 });
 
 async function handleDeleteNumber(zodiacId: number, numberId: number) {
-  const { error } = await fetchDeleteNumber(numberId);
-  if (!error) {
-    message.success('删除成功');
-    fetchData();
-  }
+  await fetchDeleteNumber(numberId);
+  message.success('删除成功');
+  fetchData();
 }
 
 // Styling helpers
@@ -228,7 +226,8 @@ const modalVisible = ref(false);
 const currentZodiacId = ref<number | null>(null);
 const formState = reactive({
   number: '',
-  color: 1 // Default to Red (1)
+  color: 1, // Default to Red (1)
+  id: undefined as number | undefined
 });
 
 const colorOptions = [
@@ -237,48 +236,78 @@ const colorOptions = [
   { label: '绿色', value: 3 }
 ];
 
-function openAddModal(zodiacId: number) {
+
+/**
+ * Handle opening the modal for adding or editing a number
+ * @param zodiacId The ID of the zodiac category
+ * @param numberId The ID of the number to edit (if editing)
+ */
+async function handleOpenModal(zodiacId: number, numberId?: number) {
   currentZodiacId.value = zodiacId;
-  formState.number = '';
-  formState.color = 1;
+  formState.id = numberId;
   modalVisible.value = true;
+
+  if (numberId) {
+    // Edit mode: fetch details
+    try {
+      const data = await fetchNumberDetail(numberId);
+      if (data) {
+        formState.number = data.zodiacNum.toString();
+        formState.color = data.color;
+      }
+    } catch (error) {
+      message.error('获取详情失败');
+    }
+  } else {
+    // Add mode: reset form
+    formState.number = '';
+    formState.color = 1;
+  }
 }
-function onClick({ key }) {
-  console.log(key);
+
+function handleMenuClick(key: string, zodiacId: number) {
   if (key === 'add') {
-    openAddModal(currentZodiacId.value || 0);
+    handleOpenModal(zodiacId);
   } else if (key === 'edit') {
-    // Handle edit
+     handleOpenModal(zodiacId);
   } else if (key === 'delete') {
     // Handle delete
   }
 }
 
-async function handleAddNumber() {
+async function handleSubmit() {
   if (!formState.number) {
     message.warning('请输入号码');
     return;
   }
 
   if (currentZodiacId.value !== null) {
-    const { error } = await fetchAddNumber({
-      zodiacId: currentZodiacId.value,
-      zodiacNum: parseInt(formState.number),
-      color: formState.color
-    });
-
-    if (!error) {
+    if (formState.id) {
+       await fetchUpdateNumber({
+        id: formState.id,
+        zodiacId: currentZodiacId.value,
+        zodiacNum: parseInt(formState.number),
+        color: formState.color
+      });
+      message.success('更新成功');
+    } else {
+      await fetchAddNumber({
+        zodiacId: currentZodiacId.value,
+        zodiacNum: parseInt(formState.number),
+        color: formState.color
+      });
       message.success('添加成功');
-      modalVisible.value = false;
-      fetchData();
     }
+
+    modalVisible.value = false;
+    fetchData();
   }
 }
 </script>
 
 <template>
   <div class="p-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
       <div v-for="zodiac in zodiacs" :key="zodiac.id"
         class="relative rounded-xl border border-solid transition-all duration-300 hover:shadow-lg flex flex-col overflow-hidden bg-white"
         :class="[getElementClass(zodiac.element, elementBorderColors)]">
@@ -298,7 +327,7 @@ async function handleAddNumber() {
               <svg-icon class="text-16px text-[#8c96ff]" icon="zmdi:more" />
             </div>
             <template #overlay>
-              <a-menu @click="onClick">
+              <a-menu @click="({ key }) => handleMenuClick(key as string, zodiac.id)">
                 <a-menu-item key="add">
                   新增
                 </a-menu-item>
@@ -319,8 +348,9 @@ async function handleAddNumber() {
             <div v-for="num in zodiac.numbers" :key="num.id" class="group relative">
               <!-- Number Circle -->
               <div
-                class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm border border-gray-100 transition-transform hover:scale-105 select-none"
-                :class="[getNumberColor(num, zodiac.element).bg, getNumberColor(num, zodiac.element).text]">
+                class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm border border-gray-100 transition-transform hover:scale-105 select-none cursor-pointer"
+                :class="[getNumberColor(num, zodiac.element).bg, getNumberColor(num, zodiac.element).text]"
+                @click="handleOpenModal(zodiac.id, num.id)">
                 {{ num.value }}
               </div>
 
@@ -344,8 +374,8 @@ async function handleAddNumber() {
       </div>
     </div>
 
-    <!-- Add Number Modal -->
-    <Modal v-model:open="modalVisible" title="录入号码" @ok="handleAddNumber" destroyOnClose width="500px">
+    <!-- Add/Edit Number Modal -->
+    <Modal v-model:open="modalVisible" :title="formState.id ? '编辑号码' : '录入号码'" @ok="handleSubmit" destroyOnClose width="500px">
       <Form layout="vertical" class="mt-4">
         <Form.Item label="号码">
           <Input v-model:value="formState.number" placeholder="请输入号码" />

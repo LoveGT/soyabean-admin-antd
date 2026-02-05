@@ -17,3 +17,21 @@ export function fetchDeleteNumber(id: number) {
     params: { id }
   });
 }
+
+/** Update zodiac number */
+export function fetchUpdateNumber(data: Api.Number.UpdateNumberParams) {
+  return demoRequest<boolean>({
+    url: '/api/sideline/zodiac/num/update',
+    method: 'post',
+    data
+  });
+}
+
+/** Get zodiac number detail */
+export function fetchNumberDetail(id: number) {
+  return demoRequest<Api.Number.NumberDetail>({
+    url: '/api/sideline/zodiac/num/detail',
+    method: 'get',
+    params: { id }
+  });
+}
