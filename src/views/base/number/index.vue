@@ -23,18 +23,18 @@ const loading = ref(false);
 
 // Icon mapping
 const iconMap: Record<string, string> = {
-  '子鼠': 'mdi:rodent',
-  '丑牛': 'mdi:cow',
-  '寅虎': 'mdi:tiger',
-  '卯兔': 'mdi:rabbit',
-  '辰龙': 'mdi:dragon',
-  '巳蛇': 'mdi:snake',
-  '午马': 'mdi:horse',
-  '未羊': 'mdi:sheep',
-  '申猴': 'mdi:monkey',
-  '酉鸡': 'mdi:rooster',
-  '戌狗': 'mdi:dog',
-  '亥猪': 'mdi:pig'
+  '子鼠': 'rat',
+  '丑牛': 'ox',
+  '寅虎': 'tiger',
+  '卯兔': 'rabbit',
+  '辰龙': 'dragon',
+  '巳蛇': 'snake',
+  '午马': 'horse',
+  '未羊': 'sheep',
+  '申猴': 'monkey',
+  '酉鸡': 'rooster',
+  '戌狗': 'dog',
+  '亥猪': 'pig'
 };
 
 function getIcon(name: string) {
@@ -44,7 +44,93 @@ function getIcon(name: string) {
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await fetchGetZodiacList();
+    // const res = await fetchGetZodiacList();
+     const res = [
+      {
+        id: 1,
+        zodiacName: '子鼠',
+        zodiacCode: 'rat',
+        homeType: 1,
+        homeTypeName: '水'
+      },
+      {
+        id: 2,
+        zodiacName: '丑牛',
+        zodiacCode: 'ox',
+        homeType: 2,
+        homeTypeName: '土'
+      },
+      {
+        id: 3,
+        zodiacName: '寅虎',
+        zodiacCode: 'tiger',
+        homeType: 3,
+        homeTypeName: '木'
+      },
+      {
+        id: 4,
+        zodiacName: '卯兔',
+        zodiacCode: 'rabbit',
+        homeType: 4,
+        homeTypeName: '火'
+      },
+      {
+        id: 5,
+        zodiacName: '辰龙',
+        zodiacCode: 'dragon',
+        homeType: 5,
+        homeTypeName: '金'
+      },
+      {
+        id: 6,
+        zodiacName: '巳蛇',
+        zodiacCode: 'snake',
+        homeType: 6,
+        homeTypeName: '水'
+      },
+      {
+        id: 7,
+        zodiacName: '午马',
+        zodiacCode: 'horse',
+        homeType: 7,
+        homeTypeName: '土'
+      },
+      {
+        id: 8,
+        zodiacName: '未羊',
+        zodiacCode: 'sheep',
+        homeType: 8,
+        homeTypeName: '木'
+      },
+      {
+        id: 9,
+        zodiacName: '申猴',
+        zodiacCode: 'monkey',
+        homeType: 9,
+        homeTypeName: '火'
+      },
+      {
+        id: 10,
+        zodiacName: '酉鸡',
+        zodiacCode: 'rooster',
+        homeType: 10,
+        homeTypeName: '金'
+      },
+      {
+        id: 11,
+        zodiacName: '戌狗',
+        zodiacCode: 'dog',
+        homeType: 11,
+        homeTypeName: '水'
+      },
+      {
+        id: 12,
+        zodiacName: '亥猪',
+        zodiacCode: 'pig',
+        homeType: 12,
+        homeTypeName: '土'
+      }
+    ];
     zodiacs.value = res.map(item => ({
       id: item.id,
       name: item.zodiacName,
@@ -202,7 +288,7 @@ async function handleAddNumber() {
           <div class="flex items-center gap-2">
             <div class="w-20 h-20 rounded-xl border border-[#e62133] flex items-center justify-center">
               <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
-              <svg-icon class="text-18 text-[#e62133]" :icon="zodiac.icon" />
+              <svg-icon class="text-18 text-[#e62133]" :local-icon="zodiac.icon" />
             </div>
 
             <span class="font-bold text-gray-700 text-lg">{{ zodiac.name }}</span>

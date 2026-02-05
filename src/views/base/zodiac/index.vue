@@ -21,18 +21,18 @@ const loading = ref(false);
 
 // Icon mapping based on zodiac name (fallback)
 const iconMap: Record<string, string> = {
-  '子鼠': 'mdi:rodent',
-  '丑牛': 'mdi:cow',
-  '寅虎': 'mdi:tiger',
-  '卯兔': 'mdi:rabbit',
-  '辰龙': 'mdi:dragon',
-  '巳蛇': 'mdi:snake',
-  '午马': 'mdi:horse',
-  '未羊': 'mdi:sheep',
-  '申猴': 'mdi:monkey',
-  '酉鸡': 'mdi:rooster',
-  '戌狗': 'mdi:dog',
-  '亥猪': 'mdi:pig'
+  '子鼠': 'rat',
+  '丑牛': 'ox',
+  '寅虎': 'tiger',
+  '卯兔': 'rabbit',
+  '辰龙': 'dragon',
+  '巳蛇': 'snake',
+  '午马': 'horse',
+  '未羊': 'sheep',
+  '申猴': 'monkey',
+  '酉鸡': 'rooster',
+  '戌狗': 'dog',
+  '亥猪': 'pig'
 };
 
 function getIcon(name: string) {
@@ -43,7 +43,94 @@ function getIcon(name: string) {
 async function fetchData() {
   loading.value = true;
   try {
-    const res = await fetchGetZodiacList();
+    // const res = await fetchGetZodiacList();
+    // 模拟下生肖列表数据
+    const res = [
+      {
+        id: 1,
+        zodiacName: '子鼠',
+        zodiacCode: 'rat',
+        homeType: 1,
+        homeTypeName: '水'
+      },
+      {
+        id: 2,
+        zodiacName: '丑牛',
+        zodiacCode: 'ox',
+        homeType: 2,
+        homeTypeName: '土'
+      },
+      {
+        id: 3,
+        zodiacName: '寅虎',
+        zodiacCode: 'tiger',
+        homeType: 3,
+        homeTypeName: '木'
+      },
+      {
+        id: 4,
+        zodiacName: '卯兔',
+        zodiacCode: 'rabbit',
+        homeType: 4,
+        homeTypeName: '火'
+      },
+      {
+        id: 5,
+        zodiacName: '辰龙',
+        zodiacCode: 'dragon',
+        homeType: 5,
+        homeTypeName: '金'
+      },
+      {
+        id: 6,
+        zodiacName: '巳蛇',
+        zodiacCode: 'snake',
+        homeType: 6,
+        homeTypeName: '水'
+      },
+      {
+        id: 7,
+        zodiacName: '午马',
+        zodiacCode: 'horse',
+        homeType: 7,
+        homeTypeName: '土'
+      },
+      {
+        id: 8,
+        zodiacName: '未羊',
+        zodiacCode: 'sheep',
+        homeType: 8,
+        homeTypeName: '木'
+      },
+      {
+        id: 9,
+        zodiacName: '申猴',
+        zodiacCode: 'monkey',
+        homeType: 9,
+        homeTypeName: '火'
+      },
+      {
+        id: 10,
+        zodiacName: '酉鸡',
+        zodiacCode: 'rooster',
+        homeType: 10,
+        homeTypeName: '金'
+      },
+      {
+        id: 11,
+        zodiacName: '戌狗',
+        zodiacCode: 'dog',
+        homeType: 11,
+        homeTypeName: '水'
+      },
+      {
+        id: 12,
+        zodiacName: '亥猪',
+        zodiacCode: 'pig',
+        homeType: 12,
+        homeTypeName: '土'
+      }
+    ];
     zodiacs.value = res.map(item => ({
       id: item.id,
       tag: `#${item.id.toString().padStart(2, '0')}`,
@@ -62,8 +149,17 @@ async function fetchData() {
 // Fetch Home Types
 const homeTypes = ref<{ label: string; value: number }[]>([]);
 async function fetchHomeTypes() {
-  const res = await fetchGetZodiacHomeType();
-  console.log(res, '========');
+  // const res = await fetchGetZodiacHomeType();
+  const res = [
+    {
+      name: '家肖',
+      value: 1
+    },
+    {
+      name: '野肖',
+      value: 2
+    }
+  ]
   homeTypes.value = res.map(item => ({ label: item.name, value: item.value }));
 }
 
@@ -78,23 +174,6 @@ async function handleDelete(id: number) {
   fetchData();
 }
 
-const elementColors: Record<string, string> = {
-  '水': 'text-blue-500 bg-blue-50',
-  '土': 'text-orange-500 bg-orange-50',
-  '木': 'text-green-500 bg-green-50',
-  '火': 'text-red-500 bg-red-50',
-  '金': 'text-yellow-500 bg-yellow-50',
-};
-
-function getElementColorClass(element: string) {
-   for (const key in elementColors) {
-        if (element.includes(key)) {
-          return elementColors[key];
-        }
-    }
-    return 'text-gray-500 bg-gray-50';
-}
-
 function getElementTagColor(element: string) {
     if (element.includes('水')) return 'blue';
     if (element.includes('土')) return 'orange';
@@ -106,7 +185,7 @@ function getElementTagColor(element: string) {
 
 
 // Top cards data (subset of zodiacs for display)
-const topCards = computed(() => zodiacs.value.slice(0, 4));
+const topCards = computed(() => zodiacs.value.slice(0, 14));
 
 // --- Modal Logic ---
 const modalVisible = ref(false);
@@ -148,28 +227,24 @@ async function handleSubmit() {
     await formRef.value?.validate();
     
     if (modalType.value === 'add') {
-      const { error } = await fetchAddZodiac({
+       await fetchAddZodiac({
         zodiacName: formModel.name,
         zodiacCode: formModel.code,
         homeType: formModel.homeType!
       });
-      if (!error) {
-        message.success('新增成功');
-        modalVisible.value = false;
-        fetchData();
-      }
+      message.success('新增成功');
+      modalVisible.value = false;
+      fetchData();
     } else if (modalType.value === 'edit' && editingId.value !== null) {
-      const { error } = await fetchUpdateZodiac({
+      await fetchUpdateZodiac({
         id: editingId.value,
         zodiacName: formModel.name,
         zodiacCode: formModel.code,
         homeType: formModel.homeType!
       });
-      if (!error) {
-        message.success('修改成功');
-        modalVisible.value = false;
-        fetchData();
-      }
+      message.success('修改成功');
+      modalVisible.value = false;
+      fetchData();
     }
   } catch (err) {
     // Validation failed
@@ -209,11 +284,11 @@ async function handleSubmit() {
         <div class="flex justify-between items-start">
           <div class="w-20 h-20 rounded-xl border border-[#e62133] flex items-center justify-center">
              <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
-             <svg-icon class="text-18 text-[#e62133]" :icon="item.icon" />
+             <svg-icon class="text-18 text-[#e62133]" :local-icon="item.icon" />
           </div>
           <Popconfirm title="确定要删除吗?" @confirm="handleDelete(item.id)">
             <div class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer" @click.stop>
-              <icon-ant-design:delete-outlined />
+              <icon-ant-design:delete-outlined class="text-6 text-[#e62133]" />
             </div>
           </Popconfirm>
         </div>
