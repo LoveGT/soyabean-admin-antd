@@ -76,11 +76,31 @@ const activeTab = ref('1');
 const currentZodiacId = ref<number | null>(null);
 
 const formState = reactive({
-    numbers: '',
-    amount: null as number | null,
-    selectedZodiacs: [] as number[],
-    customContent: ''
+    numList: [] as { nums: string; amount: number | null; key: number }[],
+    zodiacList: [] as { selectedZodiacs: number[]; amount: number | null; key: number }[],
+    customList: [] as { content: string; amount: number | null; key: number }[]
 });
+
+function addItem(type: 'items' | 'zodiac' | 'custom') {
+    const key = Date.now() + Math.random();
+    if (type === 'items') {
+        formState.numList.push({ nums: '', amount: null, key });
+    } else if (type === 'zodiac') {
+        formState.zodiacList.push({ selectedZodiacs: [], amount: null, key });
+    } else {
+        formState.customList.push({ content: '', amount: null, key });
+    }
+}
+
+function removeItem(type: 'items' | 'zodiac' | 'custom', index: number) {
+    if (type === 'items') {
+        formState.numList.splice(index, 1);
+    } else if (type === 'zodiac') {
+        formState.zodiacList.splice(index, 1);
+    } else {
+        formState.customList.splice(index, 1);
+    }
+}
 
 // Zodiac Options
 const zodiacOptions = ref<{ label: string; value: number }[]>([]);
@@ -123,10 +143,13 @@ onMounted(() => {
 
 function openAddModal(zodiacId?: number) {
     // Reset form
-    formState.numbers = '';
-    formState.amount = null;
-    formState.selectedZodiacs = typeof zodiacId === 'number' ? [zodiacId] : [];
-    formState.customContent = '';
+    formState.numList = [{ nums: '', amount: null, key: Date.now() }];
+    
+    // If zodiacId is provided, pre-fill it in the zodiac list
+    const initialZodiacs = typeof zodiacId === 'number' ? [zodiacId] : [];
+    formState.zodiacList = [{ selectedZodiacs: initialZodiacs, amount: null, key: Date.now() + 1 }];
+    
+    formState.customList = [{ content: '', amount: null, key: Date.now() + 2 }];
 
     // Default to Tab 2 if opening from a specific zodiac (if passed), else Tab 1
     activeTab.value = typeof zodiacId === 'number' ? '2' : '1';
@@ -135,50 +158,64 @@ function openAddModal(zodiacId?: number) {
 }
 
 async function addAmount() {
-    if (!formState.amount) {
-        message.warning('请输入金额');
-        return;
-    }
-
     if (activeTab.value === '1') {
         // By Number
-        if (!formState.numbers) {
-            message.warning('请输入号码');
-            return;
+        const payload = [];
+        for (const item of formState.numList) {
+            if (!item.nums || !item.amount) continue;
+            
+            // Parse numbers: "01; 02" -> [1, 2]
+            const nums = item.nums.replace(/，/g, ',').split(/[,; ]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
+            if (nums.length === 0) continue;
+            
+            payload.push({
+                zodiacNums: nums,
+                amount: item.amount
+            });
         }
-        // Parse numbers: "01; 02" -> [1, 2]
-        const nums = formState.numbers.replace(/，/g, ',').split(/[,; ]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
-        if (nums.length === 0) {
-            message.warning('请输入有效的号码');
+
+        if (payload.length === 0) {
+            message.warning('请输入有效的号码和金额');
             return;
         }
 
-        const res = await fetchAddAmountByNum([{
-            zodiacNums: nums,
-            amount: formState.amount
-        }]);
+        await fetchAddAmountByNum(payload);
 
     } else if (activeTab.value === '2') {
         // By Zodiac
-        if (formState.selectedZodiacs.length === 0) {
-            message.warning('请选择生肖');
-            return;
+        const payload = [];
+        for (const item of formState.zodiacList) {
+            if (item.selectedZodiacs.length === 0 || !item.amount) continue;
+            payload.push({
+                zodiacIds: item.selectedZodiacs,
+                amount: item.amount
+            });
         }
-        const res = await fetchAddAmountByZodiac([{
-            zodiacIds: formState.selectedZodiacs,
-            amount: formState.amount
-        }]);
+
+        if (payload.length === 0) {
+           message.warning('请输入有效的生肖和金额');
+           return;
+        }
+
+        await fetchAddAmountByZodiac(payload);
 
     } else {
         // Custom
-        if (!formState.customContent) {
-            message.warning('请输入内容');
+        const payload = [];
+        for (const item of formState.customList) {
+            if (!item.content || !item.amount) continue;
+            payload.push({
+                content: item.content,
+                amount: item.amount
+            });
+        }
+
+        if (payload.length === 0) {
+            message.warning('请输入有效的内容和金额');
             return;
         }
-        const res = await fetchAddAmountCustom([{
-            content: formState.customContent,
-            amount: formState.amount
-        }]);
+
+        await fetchAddAmountCustom(payload);
     }
 
     message.success('录入成功');
@@ -256,37 +293,61 @@ function handlePageChange(page: number) {
                 <!-- Tab 1: By Zodiac Number -->
                 <TabPane key="1" tab="按生肖号码录入">
                     <Form layout="vertical" class="mt-4">
-                        <Form.Item label="号码">
-                            <Input v-model:value="formState.numbers" placeholder="请输入号码，多个号码用分号隔开 (例如: 40;50)" />
-                        </Form.Item>
-                        <Form.Item label="金额">
-                            <InputNumber v-model:value="formState.amount" class="w-full" placeholder="请输入金额" :min="0" />
-                        </Form.Item>
+                        <div v-for="(item, index) in formState.numList" :key="item.key" class="flex gap-4 items-end mb-4">
+                            <Form.Item label="号码" class="mb-0 flex-1">
+                                <Input v-model:value="item.nums" placeholder="号码 (例如: 40;50)" />
+                            </Form.Item>
+                            <Form.Item label="金额" class="mb-0 w-120px">
+                                <InputNumber v-model:value="item.amount" class="w-full" placeholder="金额" :min="0" />
+                            </Form.Item>
+                            <Button v-if="formState.numList.length > 1" danger type="text" @click="removeItem('items', index)">
+                                <span class="i-ant-design:minus-circle-outlined text-lg"></span>
+                            </Button>
+                        </div>
+                        <Button type="dashed" block @click="addItem('items')">
+                            <span class="i-ant-design:plus-outlined"></span> 添加一行
+                        </Button>
                     </Form>
                 </TabPane>
 
                 <!-- Tab 2: By Zodiac -->
                 <TabPane key="2" tab="按生肖录入">
                     <Form layout="vertical" class="mt-4">
-                        <Form.Item label="生肖">
-                            <Select v-model:value="formState.selectedZodiacs" mode="multiple" placeholder="请选择生肖"
-                                :options="zodiacOptions" />
-                        </Form.Item>
-                        <Form.Item label="金额">
-                            <InputNumber v-model:value="formState.amount" class="w-full" placeholder="请输入金额" :min="0" />
-                        </Form.Item>
+                        <div v-for="(item, index) in formState.zodiacList" :key="item.key" class="flex gap-4 items-end mb-4">
+                            <Form.Item label="生肖" class="mb-0 flex-1">
+                                <Select v-model:value="item.selectedZodiacs" mode="multiple" placeholder="请选择生肖"
+                                    :options="zodiacOptions" />
+                            </Form.Item>
+                            <Form.Item label="金额" class="mb-0 w-120px">
+                                <InputNumber v-model:value="item.amount" class="w-full" placeholder="金额" :min="0" />
+                            </Form.Item>
+                             <Button v-if="formState.zodiacList.length > 1" danger type="text" @click="removeItem('zodiac', index)">
+                                <span class="i-ant-design:minus-circle-outlined text-lg"></span>
+                            </Button>
+                        </div>
+                        <Button type="dashed" block @click="addItem('zodiac')">
+                            <span class="i-ant-design:plus-outlined"></span> 添加一行
+                        </Button>
                     </Form>
                 </TabPane>
 
                 <!-- Tab 3: Custom Entry -->
                 <TabPane key="3" tab="自定义录入">
                     <Form layout="vertical" class="mt-4">
-                        <Form.Item label="自定义内容">
-                            <Input.TextArea v-model:value="formState.customContent" :rows="4" placeholder="请输入自定义内容" />
-                        </Form.Item>
-                        <Form.Item label="金额">
-                            <InputNumber v-model:value="formState.amount" class="w-full" placeholder="请输入金额" :min="0" />
-                        </Form.Item>
+                        <div v-for="(item, index) in formState.customList" :key="item.key" class="flex gap-4 items-end mb-4">
+                             <Form.Item label="自定义内容" class="mb-0 flex-1">
+                                <Input.TextArea v-model:value="item.content" :auto-size="{ minRows: 1, maxRows: 3 }" placeholder="请输入自定义内容" />
+                            </Form.Item>
+                            <Form.Item label="金额" class="mb-0 w-120px">
+                                <InputNumber v-model:value="item.amount" class="w-full" placeholder="金额" :min="0" />
+                            </Form.Item>
+                             <Button v-if="formState.customList.length > 1" danger type="text" @click="removeItem('custom', index)">
+                                <span class="i-ant-design:minus-circle-outlined text-lg"></span>
+                            </Button>
+                        </div>
+                        <Button type="dashed" block @click="addItem('custom')">
+                            <span class="i-ant-design:plus-outlined"></span> 添加一行
+                        </Button>
                     </Form>
                 </TabPane>
             </Tabs>
