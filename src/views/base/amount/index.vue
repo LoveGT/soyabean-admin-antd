@@ -301,11 +301,11 @@ function handlePageChange(page: number) {
                                 <InputNumber v-model:value="item.amount" class="w-full" placeholder="金额" :min="0" />
                             </Form.Item>
                             <Button v-if="formState.numList.length > 1" danger type="text" @click="removeItem('items', index)">
-                                <span class="i-ant-design:minus-circle-outlined text-lg"></span>
+                                <icon-ant-design:delete-outlined class="text-6 text-[#e62133]" />
                             </Button>
                         </div>
                         <Button type="dashed" block @click="addItem('items')">
-                            <span class="i-ant-design:plus-outlined"></span> 添加一行
+                            <icon-ant-design:plus-outlined class="mr-2" /> 添加一行
                         </Button>
                     </Form>
                 </TabPane>
@@ -322,11 +322,11 @@ function handlePageChange(page: number) {
                                 <InputNumber v-model:value="item.amount" class="w-full" placeholder="金额" :min="0" />
                             </Form.Item>
                              <Button v-if="formState.zodiacList.length > 1" danger type="text" @click="removeItem('zodiac', index)">
-                                <span class="i-ant-design:minus-circle-outlined text-lg"></span>
+                                 <icon-ant-design:delete-outlined class="text-6 text-[#e62133]" />
                             </Button>
                         </div>
                         <Button type="dashed" block @click="addItem('zodiac')">
-                            <span class="i-ant-design:plus-outlined"></span> 添加一行
+                            <icon-ant-design:plus-outlined class="mr-2" /> 添加一行
                         </Button>
                     </Form>
                 </TabPane>
@@ -342,11 +342,11 @@ function handlePageChange(page: number) {
                                 <InputNumber v-model:value="item.amount" class="w-full" placeholder="金额" :min="0" />
                             </Form.Item>
                              <Button v-if="formState.customList.length > 1" danger type="text" @click="removeItem('custom', index)">
-                                <span class="i-ant-design:minus-circle-outlined text-lg"></span>
+                                <icon-ant-design:delete-outlined class="text-6 text-[#e62133]" />
                             </Button>
                         </div>
                         <Button type="dashed" block @click="addItem('custom')">
-                            <span class="i-ant-design:plus-outlined"></span> 添加一行
+                            <icon-ant-design:plus-outlined class="mr-2" /> 添加一行
                         </Button>
                     </Form>
                 </TabPane>
