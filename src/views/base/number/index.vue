@@ -242,11 +242,10 @@ const colorOptions = [
  * @param zodiacId The ID of the zodiac category
  * @param numberId The ID of the number to edit (if editing)
  */
-async function handleOpenModal(zodiacId: number, numberId?: number) {
-  currentZodiacId.value = zodiacId;
+async function handleOpenModal(zodiac: any, numberId?: number) {
+  currentZodiacId.value = zodiac.id;
   formState.id = numberId;
   modalVisible.value = true;
-
   if (numberId) {
     // Edit mode: fetch details
     try {
@@ -265,11 +264,11 @@ async function handleOpenModal(zodiacId: number, numberId?: number) {
   }
 }
 
-function handleMenuClick(key: string, zodiacId: number) {
+function handleMenuClick(key: string, zodiac: any) {
   if (key === 'add') {
-    handleOpenModal(zodiacId);
+    handleOpenModal(zodiac);
   } else if (key === 'edit') {
-     handleOpenModal(zodiacId);
+     handleOpenModal(zodiac);
   } else if (key === 'delete') {
     // Handle delete
   }
@@ -327,16 +326,16 @@ async function handleSubmit() {
               <svg-icon class="text-16px text-[#8c96ff]" icon="zmdi:more" />
             </div>
             <template #overlay>
-              <a-menu @click="({ key }) => handleMenuClick(key as string, zodiac.id)">
+              <a-menu @click="({ key }) => handleMenuClick(key as string, zodiac)">
                 <a-menu-item key="add">
                   新增
                 </a-menu-item>
                 <a-menu-item key="edit">
                   编辑
                 </a-menu-item>
-                <a-menu-item key="delete">
+                <!-- <a-menu-item key="delete">
                   删除
-                </a-menu-item>
+                </a-menu-item> -->
               </a-menu>
             </template>
           </a-dropdown>
@@ -350,7 +349,7 @@ async function handleSubmit() {
               <div
                 class="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold shadow-sm border border-gray-100 transition-transform hover:scale-105 select-none cursor-pointer"
                 :class="[getNumberColor(num, zodiac.element).bg, getNumberColor(num, zodiac.element).text]"
-                @click="handleOpenModal(zodiac.id, num.id)">
+                @click="handleOpenModal(zodiac, num.id)">
                 {{ num.value }}
               </div>
 

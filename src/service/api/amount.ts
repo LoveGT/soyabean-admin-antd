@@ -37,10 +37,10 @@ export function fetchAddAmountCustom(data: Api.Amount.AddAmountCustomParams) {
 }
 
 /** Delete amount */
-export function fetchDeleteAmount(id: number) {
-  return demoRequest<boolean>({
-    url: '/sideline/zodiac/record/delete',
-    method: 'get',
-    params: { id }
-  });
-}
+// export function fetchDeleteAmount(id: number) {
+//   return demoRequest<boolean>({
+//     url: '/sideline/zodiac/record/delete',
+//     method: 'get',
+//     params: { id }
+//   });
+// }

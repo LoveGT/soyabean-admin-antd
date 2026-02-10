@@ -58,16 +58,16 @@ const columns = [
             return <span class={`${colorClass} font-mono`}>¥ {text.toLocaleString()}</span>;
         }
     },
-    {
-        title: '操作',
-        key: 'action',
-        align: 'center',
-        customRender: ({ record }: { record: AmountRecord }) => (
-            <Popconfirm title="确定删除吗?" onConfirm={() => handleDelete(record.id)}>
-                <Button type="link" danger>删除</Button>
-            </Popconfirm>
-        )
-    }
+    // {
+    //     title: '操作',
+    //     key: 'action',
+    //     align: 'center',
+    //     customRender: ({ record }: { record: AmountRecord }) => (
+    //         <Popconfirm title="确定删除吗?" onConfirm={() => handleDelete(record.id)}>
+    //             <Button type="link" danger>删除</Button>
+    //         </Popconfirm>
+    //     )
+    // }
 ];
 
 // Modal Logic
@@ -223,11 +223,11 @@ async function addAmount() {
     fetchData();
 }
 
-async function handleDelete(id: number) {
-    await fetchDeleteAmount(id);
-    message.success('删除成功');
-    fetchData();
-}
+// async function handleDelete(id: number) {
+//     await fetchDeleteAmount(id);
+//     message.success('删除成功');
+//     fetchData();
+// }
 
 function handleSearch() {
     fetchData(1);
