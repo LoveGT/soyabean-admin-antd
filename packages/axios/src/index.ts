@@ -54,7 +54,7 @@ function createCommonRequest<ResponseData = any>(
       if (responseType !== 'json' || opts.isBackendSuccess(response)) {
         return Promise.resolve(response);
       }
-      
+
       const fail = await opts.onBackendFail(response, instance);
       if (fail) {
         return fail;

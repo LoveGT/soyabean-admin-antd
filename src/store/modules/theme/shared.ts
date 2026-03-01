@@ -3,10 +3,10 @@ import type { ConfigProviderProps } from 'ant-design-vue';
 import { getColorPalette } from '@sa/color';
 import { getRgbOfColor } from '@sa/utils';
 import { defu } from 'defu';
-import { overrideThemeSettings, themeSettings } from '@/theme/settings';
-import { themeVars } from '@/theme/vars';
 import { toggleHtmlClass } from '@/utils/common';
 import { localStg } from '@/utils/storage';
+import { overrideThemeSettings, themeSettings } from '@/theme/settings';
+import { themeVars } from '@/theme/vars';
 
 const DARK_CLASS = 'dark';
 

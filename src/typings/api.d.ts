@@ -272,7 +272,7 @@ declare namespace Api {
     }
 
     interface UpdateNumberParams extends AddNumberParams {
-        id: number;
+      id: number;
     }
 
     interface NumberDetail {
@@ -331,5 +331,32 @@ declare namespace Api {
       amount: number;
     }
     type AddAmountCustomParams = AddAmountCustomItem[];
+
+    interface AddAmountByNumsItem {
+      amount: number;
+      zodiacNums: string;
+      description: string;
+    }
+
+    interface AddAmountByZodiacsItem {
+      amount: number;
+      zodiacIds: string;
+      description: string;
+    }
+
+    interface AddAmountByAttrsItem {
+      numType: number;
+      numSize: number;
+      color: number;
+      amount: number;
+      description: string;
+    }
+
+    interface AddAmountParams {
+      totalAmount: number;
+      byNums: AddAmountByNumsItem[];
+      byZodiacs: AddAmountByZodiacsItem[];
+      byAttrs: AddAmountByAttrsItem[];
+    }
   }
 }

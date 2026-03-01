@@ -272,7 +272,7 @@ declare namespace App {
       key: LangType;
     };
 
-    type I18nRouteKey = Exclude<RouteKey, 'root' | 'not-found'>;
+    type I18nRouteKey = Exclude<RouteKey, 'root' | 'not-found'> | 'about' | 'function';
 
     type FormMsg = {
       required: string;
@@ -394,7 +394,7 @@ declare namespace App {
           resetSuccessMsg: string;
         };
       };
-      route: Record<I18nRouteKey, string>;
+      route: Record<string, string>;
       page: {
         login: {
           common: {
@@ -726,11 +726,11 @@ declare namespace App {
     /** The demo backend service response data */
     type DemoResponse<T = unknown> = {
       /** The backend service response code */
-      status: string;
+      code: number;
       /** The backend service response message */
       message: string;
       /** The backend service response data */
-      result: T;
+      data: T;
     };
   }
 }

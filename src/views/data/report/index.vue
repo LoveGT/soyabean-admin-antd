@@ -1,7 +1,7 @@
 <script setup lang="tsx">
-import { ref, reactive } from 'vue';
-import { Card, Table, DatePicker, Button, Form, Tag, InputNumber } from 'ant-design-vue';
-import dayjs from 'dayjs';
+import { ref } from 'vue';
+import { Button, Card, DatePicker, Form, InputNumber, Table, Tag } from 'ant-design-vue';
+import type { Dayjs } from 'dayjs';
 
 // Mock Data
 interface NumberData {
@@ -17,28 +17,28 @@ const data = ref<NumberData[]>([
   { id: 2, zodiac: '丑牛', number: '02, 14, 26, 38', amount: 1500, date: '2023-10-27' },
   { id: 3, zodiac: '寅虎', number: '03, 15, 27, 39', amount: 800, date: '2023-10-26' },
   { id: 4, zodiac: '卯兔', number: '04, 16, 28, 40', amount: 2000, date: '2023-10-26' },
-  { id: 5, zodiac: '辰龙', number: '05, 17, 29, 41', amount: 1200, date: '2023-10-25' },
+  { id: 5, zodiac: '辰龙', number: '05, 17, 29, 41', amount: 1200, date: '2023-10-25' }
 ]);
 
-const searchDate = ref<dayjs.Dayjs | null>(null);
-const amount = ref<number | null>(null);
+const searchDate = ref<Dayjs | undefined>(undefined);
+const amount = ref<number | undefined>(undefined);
 const columns = [
   {
     title: '生肖',
     dataIndex: 'zodiac',
     key: 'zodiac',
-    align: 'center',
+    align: 'center' as const,
     customRender: ({ text }: { text: string }) => <span class="font-bold">{text}</span>
   },
   {
     title: '生肖号码',
     dataIndex: 'number',
     key: 'number',
-    align: 'center',
+    align: 'center' as const,
     customRender: ({ text }: { text: string }) => {
       const nums = text.split(', ');
       return (
-        <div class="flex justify-center flex-wrap gap-1">
+        <div class="flex flex-wrap justify-center gap-1">
           {nums.map(num => (
             <Tag color="blue">{num}</Tag>
           ))}
@@ -50,7 +50,7 @@ const columns = [
     title: '金额',
     dataIndex: 'amount',
     key: 'amount',
-    align: 'center',
+    align: 'center' as const,
     customRender: ({ text }: { text: number }) => (
       <span class="text-green-600 font-mono">¥ {text.toLocaleString()}</span>
     )
@@ -59,7 +59,7 @@ const columns = [
     title: '日期',
     dataIndex: 'date',
     key: 'date',
-    align: 'center',
+    align: 'center' as const
   }
 ];
 
@@ -69,10 +69,9 @@ function handleSearch() {
 }
 
 function handleReset() {
-  searchDate.value = null;
-  amount.value = null;
+  searchDate.value = undefined;
+  amount.value = undefined;
 }
-
 </script>
 
 <template>
@@ -105,12 +104,7 @@ function handleReset() {
     </Card>
 
     <Card :bordered="false" class="card-wrapper" :body-style="{ padding: '0px' }">
-      <Table
-        :columns="columns"
-        :data-source="data"
-        :pagination="{ pageSize: 10 }"
-        row-key="id"
-      />
+      <Table :columns="columns" :data-source="data" :pagination="{ pageSize: 10 }" row-key="id" />
     </Card>
   </div>
 </template>

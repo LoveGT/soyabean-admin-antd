@@ -1,7 +1,7 @@
 <script setup lang="tsx">
-import { ref, reactive, computed, onMounted } from 'vue';
-import { Button, Input, Tag, Popconfirm, Modal, Form, Select, message } from 'ant-design-vue';
-import { fetchGetZodiacList, fetchAddZodiac, fetchUpdateZodiac, fetchDeleteZodiac, fetchGetZodiacHomeType } from '@/service/api/zodiac';
+import { computed, onMounted, reactive, ref } from 'vue';
+import { Button, Form, Input, Modal, Popconfirm, Select, Tag, message } from 'ant-design-vue';
+import { fetchAddZodiac, fetchDeleteZodiac, fetchGetZodiacList, fetchUpdateZodiac } from '@/service/api/zodiac';
 
 // Data Interfaces
 interface Zodiac {
@@ -21,18 +21,18 @@ const loading = ref(false);
 
 // Icon mapping based on zodiac name (fallback)
 const iconMap: Record<string, string> = {
-  '子鼠': 'rat',
-  '丑牛': 'ox',
-  '寅虎': 'tiger',
-  '卯兔': 'rabbit',
-  '辰龙': 'dragon',
-  '巳蛇': 'snake',
-  '午马': 'horse',
-  '未羊': 'sheep',
-  '申猴': 'monkey',
-  '酉鸡': 'rooster',
-  '戌狗': 'dog',
-  '亥猪': 'pig'
+  子鼠: 'rat',
+  丑牛: 'ox',
+  寅虎: 'tiger',
+  卯兔: 'rabbit',
+  辰龙: 'dragon',
+  巳蛇: 'snake',
+  午马: 'horse',
+  未羊: 'sheep',
+  申猴: 'monkey',
+  酉鸡: 'rooster',
+  戌狗: 'dog',
+  亥猪: 'pig'
 };
 
 function getIcon(name: string) {
@@ -43,94 +43,8 @@ function getIcon(name: string) {
 async function fetchData() {
   loading.value = true;
   try {
-    // const res = await fetchGetZodiacList();
-    // 模拟下生肖列表数据
-    const res = [
-      {
-        id: 1,
-        zodiacName: '子鼠',
-        zodiacCode: 'rat',
-        homeType: 1,
-        homeTypeName: '水'
-      },
-      {
-        id: 2,
-        zodiacName: '丑牛',
-        zodiacCode: 'ox',
-        homeType: 2,
-        homeTypeName: '土'
-      },
-      {
-        id: 3,
-        zodiacName: '寅虎',
-        zodiacCode: 'tiger',
-        homeType: 3,
-        homeTypeName: '木'
-      },
-      {
-        id: 4,
-        zodiacName: '卯兔',
-        zodiacCode: 'rabbit',
-        homeType: 4,
-        homeTypeName: '火'
-      },
-      {
-        id: 5,
-        zodiacName: '辰龙',
-        zodiacCode: 'dragon',
-        homeType: 5,
-        homeTypeName: '金'
-      },
-      {
-        id: 6,
-        zodiacName: '巳蛇',
-        zodiacCode: 'snake',
-        homeType: 6,
-        homeTypeName: '水'
-      },
-      {
-        id: 7,
-        zodiacName: '午马',
-        zodiacCode: 'horse',
-        homeType: 7,
-        homeTypeName: '土'
-      },
-      {
-        id: 8,
-        zodiacName: '未羊',
-        zodiacCode: 'sheep',
-        homeType: 8,
-        homeTypeName: '木'
-      },
-      {
-        id: 9,
-        zodiacName: '申猴',
-        zodiacCode: 'monkey',
-        homeType: 9,
-        homeTypeName: '火'
-      },
-      {
-        id: 10,
-        zodiacName: '酉鸡',
-        zodiacCode: 'rooster',
-        homeType: 10,
-        homeTypeName: '金'
-      },
-      {
-        id: 11,
-        zodiacName: '戌狗',
-        zodiacCode: 'dog',
-        homeType: 11,
-        homeTypeName: '水'
-      },
-      {
-        id: 12,
-        zodiacName: '亥猪',
-        zodiacCode: 'pig',
-        homeType: 12,
-        homeTypeName: '土'
-      }
-    ];
+    const res = await fetchGetZodiacList();
+
     zodiacs.value = res.map(item => ({
       id: item.id,
       tag: `#${item.id.toString().padStart(2, '0')}`,
@@ -159,7 +73,7 @@ async function fetchHomeTypes() {
       name: '野肖',
       value: 2
     }
-  ]
+  ];
   homeTypes.value = res.map(item => ({ label: item.name, value: item.value }));
 }
 
@@ -169,20 +83,19 @@ onMounted(() => {
 });
 
 async function handleDelete(id: number) {
-  const res = await fetchDeleteZodiac(id);
-  message.success( res.message || '删除成功');
+  await fetchDeleteZodiac(id);
+  message.success('删除成功');
   fetchData();
 }
 
 function getElementTagColor(element: string) {
-    if (element.includes('水')) return 'blue';
-    if (element.includes('土')) return 'orange';
-    if (element.includes('木')) return 'green';
-    if (element.includes('火')) return 'red';
-    if (element.includes('金')) return 'gold';
-    return 'default';
+  if (element.includes('水')) return 'blue';
+  if (element.includes('土')) return 'orange';
+  if (element.includes('木')) return 'green';
+  if (element.includes('火')) return 'red';
+  if (element.includes('金')) return 'gold';
+  return 'default';
 }
-
 
 // Top cards data (subset of zodiacs for display)
 const topCards = computed(() => zodiacs.value.slice(0, 14));
@@ -195,7 +108,7 @@ const formRef = ref();
 const formModel = reactive({
   name: '',
   code: '',
-  homeType: undefined as number | undefined,
+  homeType: undefined as number | undefined
 });
 
 const editingId = ref<number | null>(null);
@@ -206,7 +119,7 @@ function handleAdd() {
   Object.assign(formModel, {
     name: '',
     code: '',
-    homeType: undefined,
+    homeType: undefined
   });
   modalVisible.value = true;
 }
@@ -217,7 +130,7 @@ function handleEdit(record: Zodiac) {
   Object.assign(formModel, {
     name: record.name,
     code: record.code,
-    homeType: record.homeType,
+    homeType: record.homeType
   });
   modalVisible.value = true;
 }
@@ -225,9 +138,9 @@ function handleEdit(record: Zodiac) {
 async function handleSubmit() {
   try {
     await formRef.value?.validate();
-    
+
     if (modalType.value === 'add') {
-       await fetchAddZodiac({
+      await fetchAddZodiac({
         zodiacName: formModel.name,
         zodiacCode: formModel.code,
         homeType: formModel.homeType!
@@ -246,20 +159,19 @@ async function handleSubmit() {
       modalVisible.value = false;
       fetchData();
     }
-  } catch (err) {
+  } catch {
     // Validation failed
   }
 }
-
 </script>
 
 <template>
   <div class="flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <!-- Header Section -->
-    <div class="flex justify-between items-start">
+    <div class="flex items-start justify-between">
       <div>
-        <h2 class="text-24px font-bold m-0">12生肖配置</h2>
-        <p class="text-gray-500 mt-4px">管理系统内的生肖分类及其属性设置</p>
+        <h2 class="m-0 text-24px font-bold">12生肖配置</h2>
+        <p class="mt-4px text-gray-500">管理系统内的生肖分类及其属性设置</p>
       </div>
       <Button type="primary" class="bg-blue-600" @click="handleAdd">
         <template #icon>
@@ -269,58 +181,64 @@ async function handleSubmit() {
       </Button>
     </div>
     <ACard :bordered="false" class="card-wrapper" :body-style="{ padding: '0px' }">
-      <div class="p-4 flex justify-between items-center border-b border-gray-100">
+      <div class="flex items-center justify-between border-b border-gray-100 p-4">
         <!-- <h3 class="font-bold text-lg m-0">所有列表</h3> -->
         <Input v-model:value="searchText" placeholder="搜索生肖..." class="w-200px">
           <template #suffix>
-            <icon-ant-design:search-outlined class="text-gray-400" />
+            <icon-ant-design-search-outlined class="text-gray-400" />
           </template>
         </Input>
       </div>
     </ACard>
     <!-- Cards Section -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      <div v-for="item in topCards" :key="item.id" class="card-wrapper bg-white p-4 flex flex-col justify-between  relative overflow-hidden group hover:shadow-md transition-all cursor-pointer">
-        <div class="flex justify-between items-start">
-          <div class="w-20 h-20 rounded-xl border border-[#e62133] flex items-center justify-center">
-             <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
-             <svg-icon class="text-18 text-[#e62133]" :local-icon="item.icon" />
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 sm:grid-cols-2">
+      <div
+        v-for="item in topCards"
+        :key="item.id"
+        class="group relative flex flex-col cursor-pointer justify-between overflow-hidden card-wrapper bg-white p-4 transition-all hover:shadow-md"
+      >
+        <div class="flex items-start justify-between">
+          <div class="h-20 w-20 flex items-center justify-center border border-[#e62133] rounded-xl">
+            <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
+            <SvgIcon class="text-18 text-[#e62133]" :icon="item.icon" :local-icon="item.icon" />
           </div>
           <Popconfirm title="确定要删除吗?" @confirm="handleDelete(item.id)">
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer" @click.stop>
-              <icon-ant-design:delete-outlined class="text-6 text-[#e62133]" />
+            <div
+              class="h-8 w-8 flex cursor-pointer items-center justify-center rounded-full text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
+              @click.stop
+            >
+              <icon-ant-design-delete-outlined class="text-6 text-[#e62133]" />
             </div>
           </Popconfirm>
         </div>
-        
+
         <div class="mt-4" @click="handleEdit(item)">
-          <h3 class="font-bold text-lg">{{ item.name }}</h3>
-          <div class="flex justify-between items-center mt-2 text-gray-500 text-xs">
+          <h3 class="text-lg font-bold">{{ item.name }}</h3>
+          <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
             <span>生 肖 代</span>
             <span class="uppercase">{{ item.generation }}</span>
           </div>
-          <div class="flex justify-between items-center mt-1 text-gray-500 text-xs">
+          <div class="mt-1 flex items-center justify-between text-xs text-gray-500">
             <span>属</span>
-            <Tag :color="getElementTagColor(item.element)" class="m-0 text-xs px-1">
-                {{ item.element }}
+            <Tag :color="getElementTagColor(item.element)" class="m-0 px-1 text-xs">
+              {{ item.element }}
             </Tag>
           </div>
         </div>
       </div>
 
       <!-- Add New Card -->
-      <div class="card-wrapper bg-white p-4 flex flex-col items-center justify-center h-140px border-dashed border-2 border-gray-200 hover:border-blue-400 hover:text-blue-500 cursor-pointer transition-colors text-gray-400" @click="handleAdd">
-        <span class="i-ant-design:plus-outlined text-3xl mb-2"></span>
+      <div
+        class="h-140px flex flex-col cursor-pointer items-center justify-center border-2 border-gray-200 card-wrapper border-dashed bg-white p-4 text-gray-400 transition-colors hover:border-blue-400 hover:text-blue-500"
+        @click="handleAdd"
+      >
+        <span class="i-ant-design:plus-outlined mb-2 text-3xl"></span>
         <span>添加更多生肖...</span>
       </div>
     </div>
 
     <!-- Modal -->
-    <Modal
-      v-model:open="modalVisible"
-      :title="modalType === 'add' ? '新增生肖' : '编辑生肖'"
-      @ok="handleSubmit"
-    >
+    <Modal v-model:open="modalVisible" :title="modalType === 'add' ? '新增生肖' : '编辑生肖'" @ok="handleSubmit">
       <Form ref="formRef" :model="formModel" layout="vertical">
         <Form.Item label="名称" name="name" :rules="[{ required: true, message: '请输入名称' }]">
           <Input v-model:value="formModel.name" placeholder="例如：子鼠" />

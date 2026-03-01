@@ -1,13 +1,13 @@
 <script setup lang="tsx">
 import { ref } from 'vue';
-import { Button, Popconfirm, Tag } from 'ant-design-vue';
 import type { Ref } from 'vue';
+import { Button, Popconfirm, Tag } from 'ant-design-vue';
 import { useBoolean } from '@sa/hooks';
+import { yesOrNoRecord } from '@/constants/common';
+import { enableStatusRecord, menuTypeRecord } from '@/constants/business';
 import { fetchGetAllPages, fetchGetMenuList } from '@/service/api';
 import { useTable, useTableOperate, useTableScroll } from '@/hooks/common/table';
 import { $t } from '@/locales';
-import { yesOrNoRecord } from '@/constants/common';
-import { enableStatusRecord, menuTypeRecord } from '@/constants/business';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import MenuOperateModal, { type OperateType } from './modules/menu-operate-modal.vue';
 
@@ -222,7 +222,7 @@ init();
       :title="$t('page.manage.menu.title')"
       :bordered="false"
       :body-style="{ flex: 1, overflow: 'hidden' }"
-      class="flex-col-stretch sm:flex-1-hidden card-wrapper"
+      class="flex-col-stretch card-wrapper sm:flex-1-hidden"
     >
       <template #extra>
         <TableHeaderOperation

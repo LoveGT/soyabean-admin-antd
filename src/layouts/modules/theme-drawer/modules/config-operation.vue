@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import Clipboard from 'clipboard';
-import { $t } from '@/locales';
 import { useThemeStore } from '@/store/modules/theme';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'ConfigOperation'

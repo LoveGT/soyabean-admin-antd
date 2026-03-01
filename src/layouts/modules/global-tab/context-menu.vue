@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Trigger } from 'ant-design-vue/es/dropdown/props';
-import { $t } from '@/locales';
 import { useTabStore } from '@/store/modules/tab';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'ContextMenu'

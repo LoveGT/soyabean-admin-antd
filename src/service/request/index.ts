@@ -142,16 +142,19 @@ export const demoRequest = createRequest<App.Service.DemoResponse>(
       return config;
     },
     isBackendSuccess(response) {
-      // when the backend response code is 0, it means the request is success
-      // you can change this logic by yourself
-      return response.data.code === 0;
+      const code = (response.data as any)?.code;
+
+      if (code === 0) return true;
+
+      const successCode = import.meta.env.VITE_SERVICE_SUCCESS_CODE;
+      return String(code) === successCode;
     },
     async onBackendFail(_response) {
       // when the backend response code is not "200", it means the request is fail
       // for example: the token is expired, refresh token and retry request
     },
     transformBackendResponse(response) {
-      return response.data.data;
+      return (response.data as any)?.data;
     },
     onError(error) {
       // when the request is fail, you can show error message
@@ -160,7 +163,7 @@ export const demoRequest = createRequest<App.Service.DemoResponse>(
 
       // show backend error message
       if (error.code === BACKEND_ERROR_CODE) {
-        message = error.response?.data?.message || message;
+        message = error.response?.data?.message || (error.response?.data as any)?.msg || message;
       }
 
       window.$message?.error(message);

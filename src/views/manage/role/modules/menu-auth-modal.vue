@@ -2,8 +2,8 @@
 import { computed, shallowRef, watch } from 'vue';
 import type { SelectProps } from 'ant-design-vue';
 import type { DataNode } from 'ant-design-vue/es/tree';
-import { $t } from '@/locales';
 import { fetchGetAllPages, fetchGetMenuTree } from '@/service/api';
+import { $t } from '@/locales';
 
 defineOptions({
   name: 'MenuAuthModal'

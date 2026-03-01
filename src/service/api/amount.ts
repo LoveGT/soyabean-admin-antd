@@ -36,6 +36,15 @@ export function fetchAddAmountCustom(data: Api.Amount.AddAmountCustomParams) {
   });
 }
 
+/** Add amount */
+export function fetchAddAmount(data: Api.Amount.AddAmountParams) {
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/record/add-amount',
+    method: 'post',
+    data
+  });
+}
+
 /** Delete amount */
 // export function fetchDeleteAmount(id: number) {
 //   return demoRequest<boolean>({

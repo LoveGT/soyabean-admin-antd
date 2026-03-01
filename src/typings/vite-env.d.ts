@@ -8,7 +8,7 @@ declare namespace Env {
   type RouterHistoryMode = 'hash' | 'history' | 'memory';
 
   /** Interface for import.meta */
-  interface ImportMeta extends ImportMetaEnv {
+  interface ViteImportMetaEnv extends ImportMetaEnv {
     /** The base url of the application */
     readonly VITE_BASE_URL: string;
     /** The title of the application */
@@ -109,5 +109,5 @@ declare namespace Env {
 }
 
 interface ImportMeta {
-  readonly env: Env.ImportMeta;
+  readonly env: Env.ViteImportMetaEnv;
 }
