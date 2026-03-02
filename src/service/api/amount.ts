@@ -44,6 +44,22 @@ export function fetchAddAmount(data: Api.Amount.AddAmountParams) {
     data
   });
 }
+/** Get amount list by num group */
+export function fetchGetAmountListByNumGroup(data: Api.Amount.AmountListParams) {
+  return demoRequest<Api.Amount.AmountListByNumGroupResponse>({
+    url: '/api/sideline/zodiac/record/num-list',
+    method: 'post',
+    data
+  });
+}
+// 根据号码属性查询号码信息
+export function fetchGetNumByAttr(data: Api.Amount.NumByAttrParams) {
+  return demoRequest<number>({
+    url: '/api/sideline/zodiac/num/by-attr',
+    method: 'get',
+    params: data
+  });
+}
 
 /** Delete amount */
 // export function fetchDeleteAmount(id: number) {

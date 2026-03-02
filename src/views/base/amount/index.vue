@@ -15,15 +15,14 @@ import {
   Tag,
   message
 } from 'ant-design-vue';
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { fetchGetZodiacList } from '@/service/api/zodiac';
-import { fetchAddAmount, fetchGetAmountList } from '@/service/api/amount';
+import { fetchAddAmount, fetchGetAmountList, fetchGetNumByAttr } from '@/service/api/amount';
 
 // Data Interfaces
 interface AmountRecord {
   id: number;
-  zodiacName: string;
-  zodiacNum: number | string; // API returns number, custom might be string?
+  description?: string;
   amount: number;
   // date: string; // API doesn't return date yet
 }
@@ -34,8 +33,7 @@ const total = ref(0);
 const currentPage = ref(1);
 const pageSize = ref(10);
 
-const searchStartTime = ref<Dayjs | undefined>(undefined);
-const searchEndTime = ref<Dayjs | undefined>(undefined);
+const searchDate = ref<Dayjs>(dayjs());
 // const searchNumGroup = ref('');
 // const sortColumn = ref<string | undefined>(undefined);
 // const sortAsc = ref<0 | 1>(1);
@@ -53,27 +51,41 @@ const searchEndTime = ref<Dayjs | undefined>(undefined);
 // ];
 
 const columns = [
+  // {
+  //   title: 'ID',
+  //   dataIndex: 'id',
+  //   key: 'id',
+  //   align: 'center' as const,
+  //   customRender: ({ text }: { text: number }) => <span class="font-mono">{text}</span>
+  // },
+  // {
+  //   title: '生肖',
+  //   dataIndex: 'zodiacName',
+  //   key: 'zodiacName',
+  //   align: 'center' as const,
+  //   customRender: ({ text }: { text: string }) => <span class="font-bold">{text || '自定义'}</span>
+  // },
+  // {
+  //   title: '生肖号码',
+  //   dataIndex: 'zodiacNum',
+  //   key: 'zodiacNum',
+  //   align: 'center' as const,
+  //   customRender: ({ text }: { text: number | string }) => {
+  //     if (!text && text !== 0) return '-';
+  //     const numStr = text.toString();
+  //     // If it's a long string (custom content), just show it
+  //     if (numStr.length > 10 && Number.isNaN(Number(numStr))) {
+  //       return <span>{numStr}</span>;
+  //     }
+  //     return <Tag color="blue">{numStr.padStart(2, '0')}</Tag>;
+  //   }
+  // },
   {
-    title: '生肖',
-    dataIndex: 'zodiacName',
-    key: 'zodiacName',
+    title: '描述',
+    dataIndex: 'description',
+    key: 'description',
     align: 'center' as const,
-    customRender: ({ text }: { text: string }) => <span class="font-bold">{text || '自定义'}</span>
-  },
-  {
-    title: '生肖号码',
-    dataIndex: 'zodiacNum',
-    key: 'zodiacNum',
-    align: 'center' as const,
-    customRender: ({ text }: { text: number | string }) => {
-      if (!text && text !== 0) return '-';
-      const numStr = text.toString();
-      // If it's a long string (custom content), just show it
-      if (numStr.length > 10 && Number.isNaN(Number(numStr))) {
-        return <span>{numStr}</span>;
-      }
-      return <Tag color="blue">{numStr.padStart(2, '0')}</Tag>;
-    }
+    customRender: ({ text }: { text?: string }) => <span class="font-mono">{text || '-'}</span>
   },
   {
     title: '金额',
@@ -107,6 +119,8 @@ interface PendingRecord {
   description: string;
   zodiacNums?: string;
   zodiacIds?: string;
+  firstZodiac?: 0 | 1;
+  matchCount?: number;
   numType?: number;
   numSize?: number;
   color?: number;
@@ -115,11 +129,67 @@ interface PendingRecord {
 const pendingRecords = ref<PendingRecord[]>([]);
 let pendingRecordId = 0;
 
-const totalAmount = computed(() => pendingRecords.value.reduce((sum, item) => sum + item.amount, 0));
+// Zodiac Options
+const zodiacOptions = ref<{ label: string; value: number; firstZodiac: 0 | 1 }[]>([]);
+const zodiacOptionsLoading = ref(false);
+const zodiacOptionsLoaded = ref(false);
+
+function parseNumCount(nums: string | undefined) {
+  if (!nums) return 0;
+  return nums
+    .split(/[\s,，]+/g)
+    .map(s => s.trim())
+    .filter(Boolean).length;
+}
+
+// function parseIdList(ids: string | undefined) {
+//   if (!ids) return [];
+//   return ids
+//     .split(',')
+//     .map(s => s.trim())
+//     .filter(Boolean)
+//     .map(s => Number(s))
+//     .filter(n => !Number.isNaN(n));
+// }
+
+// function getZodiacMatchCountByIds(zodiacIds: number[]) {
+//   const hasFirstZodiac = zodiacIds.some(id => zodiacOptions.value.find(o => o.value === id)?.firstZodiac === 1);
+//   return hasFirstZodiac ? 5 : 4;
+// }
+
+function getRecordTotalAmount(record: PendingRecord) {
+  if (record.kind === 'num') {
+    return parseNumCount(record.zodiacNums) * record.amount;
+  }
+
+  if (record.kind === 'zodiac') {
+    const matchCount = record.matchCount || 0;
+    // if (matchCount === undefined && record.firstZodiac !== undefined) {
+    //   matchCount = record.firstZodiac === 1 ? 5 : 4;
+    // }
+
+    // if (matchCount === undefined) {
+    //   const ids = parseIdList(record.zodiacIds);
+    //   if (!ids.length) return 0;
+    //   matchCount = getZodiacMatchCountByIds(ids);
+    // }
+
+    return matchCount * record.amount;
+  }
+
+  if (record.kind === 'attr') {
+    return (record.matchCount ?? 0) * record.amount;
+  }
+
+  return 0;
+}
+
+const totalAmount = computed(() => pendingRecords.value.reduce((sum, item) => sum + getRecordTotalAmount(item), 0));
 
 const kindTextMap: Record<PendingKind, string> = { num: '按号码', zodiac: '按生肖', attr: '自定义' };
 const numTypeTextMap: Record<number, string> = { 1: '单', 2: '双' };
 const numSizeTextMap: Record<number, string> = { 1: '大', 2: '小' };
+const colorTextMap: Record<number, string> = { 1: '红色', 2: '蓝色', 3: '绿色' };
 
 const numTypeOptions = [
   { label: '单', value: 1 },
@@ -129,6 +199,12 @@ const numTypeOptions = [
 const numSizeOptions = [
   { label: '大', value: 1 },
   { label: '小', value: 2 }
+];
+
+const colorOptions = [
+  { label: '红色', value: 1 },
+  { label: '蓝色', value: 2 },
+  { label: '绿色', value: 3 }
 ];
 
 function getPendingDetail(record: PendingRecord) {
@@ -149,7 +225,7 @@ function getPendingDetail(record: PendingRecord) {
 
   const numType = record.numType ? (numTypeTextMap[record.numType] ?? record.numType) : '-';
   const numSize = record.numSize ? (numSizeTextMap[record.numSize] ?? record.numSize) : '-';
-  const color = record.color ?? '-';
+  const color = record.color ? (colorTextMap[record.color] ?? record.color) : '-';
 
   return `numType:${numType} / numSize:${numSize} / color:${color}`;
 }
@@ -178,7 +254,7 @@ const pendingColumns = [
     customRender: ({ text }: { text: number }) => <span class="font-mono">¥ {text.toLocaleString()}</span>
   },
   {
-    title: '备注',
+    title: '描述',
     dataIndex: 'description',
     key: 'description',
     align: 'center' as const,
@@ -216,25 +292,100 @@ const formState = reactive({
   }
 });
 
-// Zodiac Options
-const zodiacOptions = ref<{ label: string; value: number }[]>([]);
-const zodiacOptionsLoading = ref(false);
-const zodiacOptionsLoaded = ref(false);
+const lastAutoDescription = reactive({
+  num: '',
+  zodiac: '',
+  attr: ''
+});
+
+const selectedZodiacOptions = computed(() => {
+  return formState.zodiac.zodiacIds.map(id => {
+    return (
+      zodiacOptions.value.find(o => o.value === id) ?? {
+        label: `ID:${id}`,
+        value: id,
+        firstZodiac: 0 as const
+      }
+    );
+  });
+});
 
 function getZodiacLabel(zodiacId: number) {
   return zodiacOptions.value.find(o => o.value === zodiacId)?.label || `ID:${zodiacId}`;
 }
 
+function setAutoDescription(kind: keyof typeof lastAutoDescription, next: string) {
+  const current = formState[kind].description;
+  const shouldOverwrite = !current || current === lastAutoDescription[kind];
+  if (!shouldOverwrite) return;
+
+  formState[kind].description = next;
+  lastAutoDescription[kind] = next;
+}
+
+watch(
+  () => [formState.num.zodiacNums, formState.num.amount] as const,
+  ([zodiacNums, amount]) => {
+    const nums = zodiacNums.trim();
+    const next = nums && amount !== undefined ? `${nums}各${amount}元` : '';
+    setAutoDescription('num', next);
+  }
+);
+
+watch(
+  () => [formState.zodiac.zodiacIds.slice(), formState.zodiac.amount] as const,
+  ([_zodiacIds, amount]) => {
+    const names = selectedZodiacOptions.value.map(o => o.label).join('、');
+    const next = names && amount !== undefined ? `${names}各${amount}元` : '';
+    setAutoDescription('zodiac', next);
+  }
+);
+
+watch(
+  () => [formState.attr.numType, formState.attr.numSize, formState.attr.color, formState.attr.amount] as const,
+  ([numType, numSize, color, amount]) => {
+    const parts = [
+      numType ? (numTypeTextMap[numType] ?? String(numType)) : '',
+      numSize ? (numSizeTextMap[numSize] ?? String(numSize)) : '',
+      color ? (colorTextMap[color] ?? String(color)) : ''
+    ].filter(Boolean);
+
+    const prefix = parts.join('');
+    const next = prefix && amount !== undefined ? `${prefix}各${amount}元` : '';
+    setAutoDescription('attr', next);
+  }
+);
+
 function handleRemovePending(key: string) {
   pendingRecords.value = pendingRecords.value.filter(item => item.key !== key);
 }
+// 拿到选中的生肖项
+type SelectedZodiac = { value: number; label: string; firstZodiac: 0 | 1 };
+const selectedZodiacs = ref<SelectedZodiac[]>([]);
 
+function handleSelectedOptions(_value: unknown, options: unknown) {
+  let list: unknown[] = [];
+  if (Array.isArray(options)) {
+    list = options;
+  } else if (options) {
+    list = [options];
+  }
+
+  selectedZodiacs.value = list
+    .map(opt => opt as { value?: unknown; label?: unknown; firstZodiac?: unknown })
+    .filter(opt => typeof opt.value === 'number')
+    .map(opt => ({
+      value: opt.value as number,
+      label: String(opt.label ?? ''),
+      firstZodiac: (opt.firstZodiac ?? 0) ? 1 : 0
+    }));
+}
 function handleClearPending() {
   pendingRecords.value = [];
   pendingRecordId = 0;
 }
 
-function handleAddPending() {
+async function handleAddPending() {
   if (activeTab.value === '1') {
     const zodiacNums = formState.num.zodiacNums.trim();
     if (!zodiacNums || formState.num.amount === undefined) {
@@ -272,6 +423,8 @@ function handleAddPending() {
     const zodiacIdsStr = zodiacIds.join(',');
     const amount = formState.zodiac.amount;
     const description = formState.zodiac.description || '';
+    // const matchCount = getZodiacMatchCountByIds(zodiacIds);
+    // const firstZodiac = matchCount === 5 ? 1 : 0;
     pendingRecordId += 1;
     pendingRecords.value = [
       ...pendingRecords.value,
@@ -281,6 +434,8 @@ function handleAddPending() {
         amount,
         description,
         zodiacIds: zodiacIdsStr
+        // firstZodiac,
+        // matchCount
       }
     ];
 
@@ -302,6 +457,16 @@ function handleAddPending() {
 
   const { numType, numSize, color, amount } = formState.attr;
   const description = formState.attr.description || '';
+  let matchCount = 0;
+  try {
+    matchCount = await fetchGetNumByAttr({
+      numType,
+      numSize,
+      color
+    });
+  } catch {
+    return;
+  }
   pendingRecordId += 1;
   pendingRecords.value = [
     ...pendingRecords.value,
@@ -310,6 +475,7 @@ function handleAddPending() {
       kind: 'attr',
       amount,
       description,
+      matchCount,
       numType,
       numSize,
       color
@@ -329,7 +495,11 @@ async function ensureZodiacs() {
   zodiacOptionsLoading.value = true;
   try {
     const res = await fetchGetZodiacList();
-    zodiacOptions.value = res.map(z => ({ label: z.zodiacName, value: z.id }));
+    zodiacOptions.value = res.map(z => ({
+      label: z.zodiacName,
+      value: z.id,
+      firstZodiac: (z.firstZodiac ?? 0) ? 1 : 0
+    }));
     zodiacOptionsLoaded.value = true;
   } finally {
     zodiacOptionsLoading.value = false;
@@ -344,23 +514,13 @@ async function fetchData(page = 1) {
       pageSize: pageSize.value,
       params: {
         // numGroup: searchNumGroup.value || undefined,
-        startTime: searchStartTime.value ? searchStartTime.value.valueOf() : undefined,
-        endTime: searchEndTime.value ? searchEndTime.value.valueOf() : undefined
+        startTime: searchDate.value.startOf('day').valueOf(),
+        endTime: searchDate.value.endOf('day').valueOf()
       }
-      // sorts: sortColumn.value
-      //   ? [
-      //       {
-      //         column: sortColumn.value,
-      //         asc: sortAsc.value === 1
-      //       }
-      //     ]
-      //   : undefined
     });
-
     data.value = res.data.map(item => ({
       id: item.id,
-      zodiacName: item.zodiacName,
-      zodiacNum: item.zodiacNum,
+      description: item.description,
       amount: item.amount
     }));
     total.value = res.total;
@@ -459,8 +619,7 @@ function handleSearch() {
 }
 
 function handleReset() {
-  searchStartTime.value = undefined;
-  searchEndTime.value = undefined;
+  searchDate.value = dayjs();
   // searchNumGroup.value = '';
   // sortColumn.value = undefined;
   // sortAsc.value = 1;
@@ -476,29 +635,9 @@ function handlePageChange(page: number) {
   <div class="flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <Card :bordered="false" class="card-wrapper">
       <Form layout="inline" class="flex-wrap gap-4">
-        <Form.Item label="查询开始时间">
-          <DatePicker v-model:value="searchStartTime" show-time placeholder="开始时间" class="w-220px" />
+        <Form.Item label="查询日期">
+          <DatePicker v-model:value="searchDate" placeholder="选择日期" class="w-220px" />
         </Form.Item>
-        <Form.Item label="查询结束时间">
-          <DatePicker v-model:value="searchEndTime" show-time placeholder="结束时间" class="w-220px" />
-        </Form.Item>
-        <!--
- <Form.Item label="号码组">
-          <Input v-model:value="searchNumGroup" class="w-200px" placeholder="请输入号码组" />
-        </Form.Item>
-        <Form.Item label="排序字段">
-          <Select
-            v-model:value="sortColumn"
-            class="w-160px"
-            placeholder="选择字段"
-            :options="sortColumnOptions"
-            allow-clear
-          />
-        </Form.Item>
-        <Form.Item label="排序方式">
-          <Select v-model:value="sortAsc" class="w-120px" :options="sortOrderOptions" />
-        </Form.Item> 
--->
         <Form.Item>
           <div class="flex gap-2">
             <Button type="primary" @click="handleSearch">
@@ -575,6 +714,7 @@ function handlePageChange(page: number) {
                   placeholder="请选择生肖"
                   :options="zodiacOptions"
                   :loading="zodiacOptionsLoading"
+                  @change="handleSelectedOptions"
                 />
               </Form.Item>
               <Form.Item label="金额" class="mb-0 w-120px">
@@ -611,7 +751,12 @@ function handlePageChange(page: number) {
                 />
               </Form.Item>
               <Form.Item label="color" class="mb-0 w-160px">
-                <InputNumber v-model:value="formState.attr.color" class="w-full" placeholder="color" :min="0" />
+                <Select
+                  v-model:value="formState.attr.color"
+                  placeholder="颜色"
+                  :options="colorOptions"
+                  class="w-full"
+                />
               </Form.Item>
               <Form.Item label="金额" class="mb-0 w-160px">
                 <InputNumber v-model:value="formState.attr.amount" class="w-full" placeholder="金额" :min="0" />

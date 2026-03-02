@@ -1,6 +1,6 @@
 <script setup lang="tsx">
 import { computed, onMounted, reactive, ref } from 'vue';
-import { Button, Form, Input, Modal, Popconfirm, Select, Tag, message } from 'ant-design-vue';
+import { Button, Form, Input, Modal, Popconfirm, Radio, Select, Tag, message } from 'ant-design-vue';
 import { fetchAddZodiac, fetchDeleteZodiac, fetchGetZodiacList, fetchUpdateZodiac } from '@/service/api/zodiac';
 
 // Data Interfaces
@@ -11,6 +11,7 @@ interface Zodiac {
   code: string;
   element: string; // Mapped from homeTypeName
   homeType: number;
+  firstZodiac: number;
   generation: string;
   icon: string;
 }
@@ -52,6 +53,7 @@ async function fetchData() {
       code: item.zodiacCode,
       element: item.homeTypeName || 'Unknown',
       homeType: item.homeType,
+      firstZodiac: item.firstZodiac ?? 0,
       generation: item.zodiacCode, // Using code as generation for now
       icon: getIcon(item.zodiacName) || 'ox'
     }));
@@ -108,7 +110,8 @@ const formRef = ref();
 const formModel = reactive({
   name: '',
   code: '',
-  homeType: undefined as number | undefined
+  homeType: undefined as number | undefined,
+  firstZodiac: 0
 });
 
 const editingId = ref<number | null>(null);
@@ -119,7 +122,8 @@ function handleAdd() {
   Object.assign(formModel, {
     name: '',
     code: '',
-    homeType: undefined
+    homeType: undefined,
+    firstZodiac: 0
   });
   modalVisible.value = true;
 }
@@ -130,7 +134,8 @@ function handleEdit(record: Zodiac) {
   Object.assign(formModel, {
     name: record.name,
     code: record.code,
-    homeType: record.homeType
+    homeType: record.homeType,
+    firstZodiac: record.firstZodiac ?? 0
   });
   modalVisible.value = true;
 }
@@ -143,7 +148,8 @@ async function handleSubmit() {
       await fetchAddZodiac({
         zodiacName: formModel.name,
         zodiacCode: formModel.code,
-        homeType: formModel.homeType!
+        homeType: formModel.homeType!,
+        firstZodiac: formModel.firstZodiac
       });
       message.success('新增成功');
       modalVisible.value = false;
@@ -153,7 +159,8 @@ async function handleSubmit() {
         id: editingId.value,
         zodiacName: formModel.name,
         zodiacCode: formModel.code,
-        homeType: formModel.homeType!
+        homeType: formModel.homeType!,
+        firstZodiac: formModel.firstZodiac
       });
       message.success('修改成功');
       modalVisible.value = false;
@@ -195,21 +202,25 @@ async function handleSubmit() {
       <div
         v-for="item in topCards"
         :key="item.id"
-        class="group relative flex flex-col cursor-pointer justify-between overflow-hidden card-wrapper bg-white p-4 transition-all hover:shadow-md"
+        class="group relative flex flex-col cursor-pointer justify-between overflow-hidden card-wrapper p-4 transition-all hover:shadow-md"
+        :class="item.firstZodiac === 1 ? 'bg-amber-50 ring-1 ring-amber-200' : 'bg-white'"
       >
         <div class="flex items-start justify-between">
           <div class="h-20 w-20 flex items-center justify-center border border-[#e62133] rounded-xl">
             <!-- <span :class="[item.icon, 'text-xl']"></span>  -->
             <SvgIcon class="text-18 text-[#e62133]" :icon="item.icon" :local-icon="item.icon" />
           </div>
-          <Popconfirm title="确定要删除吗?" @confirm="handleDelete(item.id)">
-            <div
-              class="h-8 w-8 flex cursor-pointer items-center justify-center rounded-full text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
-              @click.stop
-            >
-              <icon-ant-design-delete-outlined class="text-6 text-[#e62133]" />
-            </div>
-          </Popconfirm>
+          <div class="flex items-start gap-2">
+            <Tag v-if="item.firstZodiac === 1" color="gold" class="m-0 px-2 text-xs">首肖</Tag>
+            <Popconfirm title="确定要删除吗?" @confirm="handleDelete(item.id)">
+              <div
+                class="h-8 w-8 flex cursor-pointer items-center justify-center rounded-full text-gray-400 transition-all hover:bg-red-50 hover:text-red-500"
+                @click.stop
+              >
+                <icon-ant-design-delete-outlined class="text-6 text-[#e62133]" />
+              </div>
+            </Popconfirm>
+          </div>
         </div>
 
         <div class="mt-4" @click="handleEdit(item)">
@@ -248,6 +259,12 @@ async function handleSubmit() {
         </Form.Item>
         <Form.Item label="归属类型" name="homeType" :rules="[{ required: true, message: '请选择类型' }]">
           <Select v-model:value="formModel.homeType" :options="homeTypes" placeholder="请选择类型" />
+        </Form.Item>
+        <Form.Item label="是否首肖" name="firstZodiac" :rules="[{ required: true, message: '请选择是否首肖' }]">
+          <Radio.Group v-model:value="formModel.firstZodiac">
+            <Radio :value="1">是</Radio>
+            <Radio :value="0">否</Radio>
+          </Radio.Group>
         </Form.Item>
       </Form>
     </Modal>

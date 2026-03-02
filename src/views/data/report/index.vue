@@ -1,49 +1,35 @@
 <script setup lang="tsx">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Button, Card, DatePicker, Form, InputNumber, Table, Tag } from 'ant-design-vue';
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
+import { fetchGetAmountListByNumGroup } from '@/service/api/amount';
 
-// Mock Data
-interface NumberData {
-  id: number;
-  zodiac: string;
-  number: string;
-  amount: number;
-  date: string;
-}
+type ReportRow = Api.Amount.AmountNumGroupRecord;
 
-const data = ref<NumberData[]>([
-  { id: 1, zodiac: '子鼠', number: '01, 13, 25, 37, 49', amount: 1000, date: '2023-10-27' },
-  { id: 2, zodiac: '丑牛', number: '02, 14, 26, 38', amount: 1500, date: '2023-10-27' },
-  { id: 3, zodiac: '寅虎', number: '03, 15, 27, 39', amount: 800, date: '2023-10-26' },
-  { id: 4, zodiac: '卯兔', number: '04, 16, 28, 40', amount: 2000, date: '2023-10-26' },
-  { id: 5, zodiac: '辰龙', number: '05, 17, 29, 41', amount: 1200, date: '2023-10-25' }
-]);
+const data = ref<ReportRow[]>([]);
+const loading = ref(false);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
 
-const searchDate = ref<Dayjs | undefined>(undefined);
-const amount = ref<number | undefined>(undefined);
+const searchDate = ref<Dayjs>(dayjs());
+const amountLimit = ref<number | undefined>(undefined);
 const columns = [
   {
     title: '生肖',
-    dataIndex: 'zodiac',
-    key: 'zodiac',
+    dataIndex: 'zodiacName',
+    key: 'zodiacName',
     align: 'center' as const,
     customRender: ({ text }: { text: string }) => <span class="font-bold">{text}</span>
   },
   {
     title: '生肖号码',
-    dataIndex: 'number',
-    key: 'number',
+    dataIndex: 'zodiacNum',
+    key: 'zodiacNum',
     align: 'center' as const,
-    customRender: ({ text }: { text: string }) => {
-      const nums = text.split(', ');
-      return (
-        <div class="flex flex-wrap justify-center gap-1">
-          {nums.map(num => (
-            <Tag color="blue">{num}</Tag>
-          ))}
-        </div>
-      );
+    customRender: ({ text }: { text: number }) => {
+      const numStr = String(text).padStart(2, '0');
+      return <Tag color="blue">{numStr}</Tag>;
     }
   },
   {
@@ -51,27 +37,51 @@ const columns = [
     dataIndex: 'amount',
     key: 'amount',
     align: 'center' as const,
-    customRender: ({ text }: { text: number }) => (
-      <span class="text-green-600 font-mono">¥ {text.toLocaleString()}</span>
-    )
-  },
-  {
-    title: '日期',
-    dataIndex: 'date',
-    key: 'date',
-    align: 'center' as const
+    customRender: ({ text }: { text: number }) => {
+      const limit = amountLimit.value;
+      const isOverLimit = limit !== undefined && text > limit;
+      const colorClass = isOverLimit ? 'text-red-600' : 'text-green-600';
+      return <span class={`${colorClass} font-mono`}>¥ {text.toLocaleString()}</span>;
+    }
   }
 ];
 
+async function fetchData(page = 1) {
+  loading.value = true;
+  try {
+    const res = await fetchGetAmountListByNumGroup({
+      pageIndex: page,
+      pageSize: pageSize.value,
+      params: {
+        startTime: searchDate.value.startOf('day').valueOf(),
+        endTime: searchDate.value.endOf('day').valueOf()
+      }
+    });
+    data.value = res.data;
+    total.value = res.total;
+    currentPage.value = page;
+  } finally {
+    loading.value = false;
+  }
+}
+
 function handleSearch() {
-  // Mock search logic
-  console.log('Search date:', searchDate.value?.format('YYYY-MM-DD'));
+  fetchData(1);
 }
 
 function handleReset() {
-  searchDate.value = undefined;
-  amount.value = undefined;
+  searchDate.value = dayjs();
+  amountLimit.value = undefined;
+  fetchData(1);
 }
+
+function handlePageChange(page: number) {
+  fetchData(page);
+}
+
+onMounted(() => {
+  fetchData();
+});
 </script>
 
 <template>
@@ -82,7 +92,7 @@ function handleReset() {
           <DatePicker v-model:value="searchDate" placeholder="选择日期" class="w-200px" />
         </Form.Item>
         <Form.Item label="限定金额">
-         <InputNumber v-model:value="amount" class="w-full" placeholder="请输入金额" :min="0" />
+          <InputNumber v-model:value="amountLimit" class="w-200px" placeholder="请输入金额" :min="0" />
         </Form.Item>
         <Form.Item>
           <div class="flex gap-2">
@@ -104,7 +114,18 @@ function handleReset() {
     </Card>
 
     <Card :bordered="false" class="card-wrapper" :body-style="{ padding: '0px' }">
-      <Table :columns="columns" :data-source="data" :pagination="{ pageSize: 10 }" row-key="id" />
+      <Table
+        :columns="columns"
+        :data-source="data"
+        :pagination="{
+          current: currentPage,
+          pageSize: pageSize,
+          total: total,
+          onChange: handlePageChange
+        }"
+        row-key="zodiacId"
+        :loading="loading"
+      />
     </Card>
   </div>
 </template>

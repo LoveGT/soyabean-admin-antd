@@ -241,6 +241,7 @@ declare namespace Api {
       zodiacCode: string;
       zodiacName: string;
       homeType: number;
+      firstZodiac: number;
       homeTypeName: string;
       zodiacNums: ZodiacNum[];
     }
@@ -249,6 +250,7 @@ declare namespace Api {
       zodiacCode: string;
       zodiacName: string;
       homeType: number;
+      firstZodiac: number;
     }
 
     interface UpdateZodiacParams extends AddZodiacParams {
@@ -292,6 +294,7 @@ declare namespace Api {
       zodiacId: number;
       zodiacName: string;
       zodiacNum: number;
+      description?: string;
       amount: number;
     }
 
@@ -313,6 +316,29 @@ declare namespace Api {
       totalPages: number;
       data: AmountRecord[];
     }
+
+    interface AmountNumGroupRecord {
+      zodiacId: number;
+      zodiacName: string;
+      zodiacNum: number;
+      amount: number;
+    }
+
+    interface AmountListByNumGroupResponse {
+      pageIndex: number;
+      pageSize: number;
+      totalPages: number;
+      total: number;
+      data: AmountNumGroupRecord[];
+    }
+
+    interface NumByAttrParams {
+      color: number;
+      numSize: number;
+      numType: number;
+      [property: string]: any;
+    }
+    type NumByAttrResponse = number;
 
     interface AddAmountByNumItem {
       zodiacNums: number[];
